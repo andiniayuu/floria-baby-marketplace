@@ -29,24 +29,24 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-            Forms\Components\textInput::make('name')
-                ->required(),
+                Forms\Components\textInput::make('name')
+                    ->required(),
 
-            Forms\Components\textInput::make('email')
-                ->label('Email Address')
-                ->email()
-                ->maxLength(255)
-                ->unique(ignoreRecord:true)
-                ->required(),
+                Forms\Components\textInput::make('email')
+                    ->label('Email Address')
+                    ->email()
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true)
+                    ->required(),
 
-            Forms\Components\DateTimePicker::make('email_verified_at')
-                ->label('Email Verified At')
-                ->default(now()),
-              
-            Forms\Components\textInput::make('password')
-                ->password()
-                ->dehydrated(fn ($state) => filled($state))
-                ->required(fn (Page $livewire): bool => $livewire instanceof CreateRecord),
+                Forms\Components\DateTimePicker::make('email_verified_at')
+                    ->label('Email Verified At')
+                    ->default(now()),
+
+                Forms\Components\textInput::make('password')
+                    ->password()
+                    ->dehydrated(fn($state) => filled($state))
+                    ->required(fn(Page $livewire): bool => $livewire instanceof CreateRecord),
             ]);
     }
 
@@ -59,7 +59,7 @@ class UserResource extends Resource
 
                 tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                
+
                 tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),
@@ -70,7 +70,7 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(), 
+                    Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
                 ])
             ])
@@ -84,7 +84,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\OrdersRelationManager::class,
         ];
     }
 
