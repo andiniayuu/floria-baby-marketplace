@@ -26,6 +26,8 @@ class BrandResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
 
+    protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -37,7 +39,7 @@ class BrandResource extends Resource
                                 ->required()
                                 ->maxLength(255)
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn (string $operation, $state, Set $set) => $operation === 'create'? $set('slug', Str::slug($state)) : null),
+                                ->afterStateUpdated(fn(string $operation, $state, Set $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null),
 
                             TextInput::make('slug')
                                 ->maxLength(255)
@@ -47,13 +49,13 @@ class BrandResource extends Resource
                                 ->unique(Brand::class, 'slug', ignoreRecord: true)
                         ]),
 
-                        FileUpload::make('image')
-                            ->image()
-                            ->directory('brands'),
+                    FileUpload::make('image')
+                        ->image()
+                        ->directory('brands'),
 
-                        Toggle::make('is_active')
-                            ->required()
-                            ->default(true)
+                    Toggle::make('is_active')
+                        ->required()
+                        ->default(true)
                 ])
             ]);
     }
@@ -89,7 +91,7 @@ class BrandResource extends Resource
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(), 
+                    Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
                 ])
             ])

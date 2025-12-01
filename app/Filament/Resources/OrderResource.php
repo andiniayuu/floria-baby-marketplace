@@ -38,6 +38,8 @@ class OrderResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
+    protected static ?int $navigationSort = 5;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -259,7 +261,7 @@ class OrderResource extends Resource
     public static function getNavigationBadgeColor(): string|array|null
     {
         return static::getModel()::count() > 0
-        ? 'success': 'danger';
+            ? 'success' : 'danger';
     }
 
     public static function getPages(): array
