@@ -148,7 +148,7 @@ class OrderResource extends Resource
                                     ->required()
                                     ->disabled()
                                     ->dehydrated()
-                                    ->columnspan(3),
+                                    ->columnSpan(3),
 
                                 TextInput::make('total_amount')
                                     ->numeric()
