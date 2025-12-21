@@ -111,9 +111,9 @@
           <!-- Sort -->
           <div class="mb-5">
             <div class="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm">
-              <select class="w-44 text-base bg-white border border-gray-300 rounded-lg text-gray-700 focus:ring-rose-400">
-                <option>Sort by latest</option>
-                <option>Sort by price</option>
+              <select wire:model.live="sort" class="w-44 text-base bg-white border border-gray-300 rounded-lg text-gray-700 focus:ring-rose-400">
+                <option value="latest">Sort by latest</option>
+                <option value="price">Sort by price</option>
               </select>
             </div>
           </div>
