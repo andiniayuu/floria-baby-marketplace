@@ -122,8 +122,9 @@
           <div class="flex flex-wrap -mx-3">
             @foreach ($products as $product)
               <div class="w-full px-3 mb-6 sm:w-1/2 md:w-1/3" wire:key="{{ $product->id }}">
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition overflow-hidden h-full flex flex-col">
 
+                  {{-- Image Product --}}
                   <a href="/products/{{ $product->slug }}">
                     <img
                       src="{{ url('storage', $product->images[0]) }}"
@@ -132,27 +133,54 @@
                     >
                   </a>
 
-                  <div class="p-4">
-                    <h3 class="mb-1 text-lg font-semibold text-gray-800 line-clamp-2">
+                  <div class="p-4 flex flex-col flex-1">
+                    {{-- nama product --}}
+                    <h3 class="mb-2 text-base font-semibold text-gray-800 line-clamp-2">
                       {{ $product->name }}
                     </h3>
 
+                    {{-- harga --}}
                     <span class="text-lg font-bold text-green-600 tracking-wide">
                       Rp{{ number_format($product->price, 0, ',', '.') }}
                     </span>
                   </div>
 
-                  <div class="flex justify-center p-4 border-t border-gray-200">
-                    <a
-                      href="#"
-                      class="flex items-center gap-2 px-4 py-2 text-base font-medium text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5z"/>
-                      </svg>
+                  <div class="mt-4 border-t border-gray-100"></div>
+                  <div class="mt-auto pt-3 pb-2 flex justify-center">
+
+                  <button
+                    wire:key="add-to-cart-{{ $product->id }}"
+                    wire:click.prevent="addToCart({{ $product->id }})"
+                    wire:loading.attr="disabled"
+                    wire:target="addToCart({{ $product->id }})"
+                    class="flex items-center gap-2 px-6 py-2 text-sm font-medium text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 transition disabled:opacity-60">
+
+                    <!-- ICON -->
+                    <svg
+                      wire:loading.remove
+                      wire:target="addToCart({{ $product->id }})"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 16 16">
+                      <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                  
+                    <!-- TEXT NORMAL -->
+                    <span
+                      wire:loading.remove
+                      wire:target="addToCart({{ $product->id }})">
                       Add to Cart
-                    </a>
-                  </div>
+                    </span>
+                  
+                    <!-- TEXT LOADING -->
+                    <span
+                      wire:loading
+                      wire:target="addToCart({{ $product->id }})">
+                      Adding...
+                    </span>
+                  </button>
+                </div>
 
                 </div>
               </div>

@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Helpers\CartManagement;
+use App\Livewire\Partials\Navbar;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -9,6 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 #[Title('Products - BabyShop')]
 class ProductsPage extends Component
@@ -28,10 +31,28 @@ class ProductsPage extends Component
     public $on_sale;
 
     #[Url]
-    public $price_range = 50000;
+    public $price_range = 0;
 
     #[Url]
     public $sort = 'latest';
+
+    // add product to cart method
+    public function addToCart($product_id)
+    {
+
+        $total_count = CartManagement::addItemToCart($product_id);
+
+        $this->dispatch('update-cart-count', total_count: $total_count)->to(Navbar::class);
+
+        session()->push('cart', $product_id);
+
+        // Tampilan Notif
+        LivewireAlert::title('Sukses!')
+            ->text('Produk ditambahkan')
+            ->success()
+            ->confirmButtonText('OK')
+            ->show();
+    }
 
     public function render()
     {
@@ -45,23 +66,23 @@ class ProductsPage extends Component
             $productQuery->whereIn('brand_id', $this->selected_brands);
         }
 
-        if($this->featured){
+        if ($this->featured) {
             $productQuery->where('is_feature', 1);
         }
 
-        if($this->on_sale){
+        if ($this->on_sale) {
             $productQuery->where('on_sale', 1);
         }
 
-        if($this->price_range){
+        if ($this->price_range) {
             $productQuery->whereBetween('price', [0, $this->price_range]);
         }
 
-        if($this->sort == 'latest') {
+        if ($this->sort == 'latest') {
             $productQuery->latest();
         }
 
-        if($this->sort == 'price') {
+        if ($this->sort == 'price') {
             $productQuery->orderBy('price');
         }
 
