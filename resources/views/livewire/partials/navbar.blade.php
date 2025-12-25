@@ -1,8 +1,8 @@
-<header class="flex z-50 sticky top-0 flex-wrap md:justify-start md:flex-nowrap w-full bg-white text-sm py-3 md:py-0 dark:bg-gray-800 shadow-md">
+<header class="flex z-50 sticky top-0 flex-wrap md:justify-start md:flex-nowrap w-full bg-white text-sm py-3 md:py-0 shadow-md">
   <nav class="max-w-[85rem] w-full mx-auto px-4 md:px-6 lg:px-8" aria-label="Global">
     <div class="relative md:flex md:items-center md:justify-between">
       <div class="flex items-center justify-between">
-        <a class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="Brand">BabyShop</a>
+        <a class="flex-none text-xl font-semibold text-gray-800" href="/" aria-label="Brand">BabyShop</a>
         <div class="md:hidden">
           <button type="button" class="hs-collapse-toggle flex justify-center items-center w-9 h-9 text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
             <svg class="hs-collapse-open:hidden flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,9 +26,9 @@
   href="/"
   class="font-medium py-3 md:py-6
       @if(request()->is('/'))
-          text-blue-600 dark:text-blue-500
+          text-blue-600 
       @else
-          text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500
+          text-gray-500 hover:text-gray-400 
       @endif">
     Home
 </a>
@@ -71,7 +71,8 @@
               <span class="mr-1">Cart</span> <span class="py-0.5 px-1.5 rounded-full text-xs font-medium bg-blue-50 border border-blue-200 text-blue-600">{{ $total_count }}</span>
             </a>
 
-            <div class="pt-3 md:pt-0">
+            @guest
+              <div class="pt-3 md:pt-0">
               <a class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/login">
                 <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -80,29 +81,52 @@
                 Log in
               </a>
             </div>
+            @endguest
 
-          <div class="hs-dropdown [--strategy:static] md:[--strategy:fixed] [--adaptive:none] md:[--trigger:hover] md:py-4">
-              <button type="button" class="flex items-center w-full text-gray-500 hover:text-gray-400 font-medium dark:text-gray-400 dark:hover:text-gray-500">
-                User Name
-            <svg class="ms-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-            </button>
+            @auth
+<div class="relative hs-dropdown md:py-4">
 
-            <div class="hs-dropdown-menu transition-[opacity,margin] duration-[0.1ms] md:duration-[150ms] hs-dropdown-open:opacity-100 opacity-0 md:w-48 hidden z-10 bg-white md:shadow-md rounded-lg p-2 dark:bg-gray-800 md:dark:border dark:border-gray-700 dark:divide-gray-700 before:absolute top-full md:border before:-top-5 before:start-0 before:w-full before:h-5">
-              <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
-                My Orders
-              </a>
+  <!-- Button -->
+  <button type="button"
+    class="flex items-center gap-2 font-medium text-gray-600 hover:text-gray-800">
+    {{ auth()->user()->name }}
 
-              <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
-                My Account
-              </a>
-              <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
-                Logout
-              </a>
-            </div>
-          </div> 
+    <svg class="w-4 h-4 transition-transform hs-dropdown-open:rotate-180"
+      xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+    </svg>
+  </button>
 
+  <!-- Dropdown -->
+  <div
+    class="hs-dropdown-menu absolute right-0 top-full mt-2 hidden z-50
+    w-48 bg-white border border-gray-200 shadow-lg rounded-lg p-2">
+
+    <a href="#"
+      class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
+      My Orders
+    </a>
+
+    <a href="#"
+      class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
+      My Account
+    </a>
+
+    <form method="POST" action="{{ route('logout') }}">
+  @csrf
+  <button type="submit"
+    class="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50">
+    Logout
+  </button>
+</form>
+
+  </div>
+
+</div>
+@endauth
+
+      
           </div>
         </div>
       </div>
