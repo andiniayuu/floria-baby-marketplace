@@ -146,11 +146,13 @@
         </div>
 
         @if ($cart_items)
-        <button
-          class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-          Checkout
-        </button>
+         <div class="flex justify-center mt-6">
+            <a href="/checkout" class="w-full max-w-xs bg-blue-600 text-center hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
+            Checkout
+             </a>
+        </div>
         @endif
+        
       </div>
     </div>
 
