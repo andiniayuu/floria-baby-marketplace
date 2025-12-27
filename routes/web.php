@@ -24,13 +24,14 @@ Route::get('/cart', CartPage::class);
 Route::get('/products/{slug}', ProductsDetailPage::class);
 
 Route::middleware('guest')->group(function () {
-    Route::get('/login', LoginPage::class);
+    Route::get('/login', LoginPage::class)->name('login');
     Route::get('/register', RegisterPage::class);
     Route::get('/forgot', ForgotPasswordPage::class)->name('password.request');
     Route::get('/reset/{token}', ResetPasswordPage::class)->name('password.reset');
 });
 
 Route::middleware('auth')->group(function () {
+    
     Route::post('/logout', function () {
         Auth::logout();
 
@@ -43,6 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', CheckoutPage::class);
     Route::get('/my-orders', MyOrdersPage::class);
     Route::get('/my-orders/{order}', MyOrdersDetailPage::class);
-    Route::get('/success', SuccessPage::class);
-    Route::get('/cancel', CancelPage::class);
+    Route::get('/order/success', SuccessPage::class)->name('order.success');
+    Route::get('/order/cancel', CancelPage::class)->name('order.cancel');
 });
