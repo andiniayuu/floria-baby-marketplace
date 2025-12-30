@@ -103,7 +103,7 @@
     class="hs-dropdown-menu absolute right-0 top-full mt-2 hidden z-50
     w-48 bg-white border border-gray-200 shadow-lg rounded-lg p-2">
 
-    <a href="#"
+    <a wire:navigate href="/my-orders"
       class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
       My Orders
     </a>
