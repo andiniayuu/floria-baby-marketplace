@@ -1,5 +1,7 @@
 <div class="w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
-  <h1 class="text-4xl font-bold text-slate-500">Order Details</h1>
+  <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-500">
+  Order Details
+</h1>
 
   <!-- Grid -->
   <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-5">
@@ -21,8 +23,8 @@
               Customer
             </p>
           </div>
-          <div class="mt-1 flex items-center gap-x-2">
-            <div>{{ $address->full_name }}</div>
+          <div class="mt-1 flex items-center gap-x-2 flex-wrap">
+            <div class="text-sm sm:text-base font-medium">{{ $address->full_name }}</div>
           </div>
         </div>
       </div>
@@ -49,7 +51,7 @@
           </div>
           <div class="mt-1 flex items-center gap-x-2">
             <h3 class="text-xl font-medium text-gray-800">
-              {{ $order_items[0]->created_at->format('d-m-y') }}
+              {{ $order->created_at->format('d-m-Y') }}
             </h3>
           </div>
         </div>
@@ -84,7 +86,7 @@
                 $status = '<span class="bg-yellow-500 py-1 px-3 rounded text-white shadow">Processing</span>';
                }
                if($order->status == 'shipped'){
-                $status = '<span class="bg-green-500 py-1 px-3 rounded text-white shadow">Shipped</span>';
+                $status = '<span class="text-xs sm:text-sm bg-green-500 py-1 px-3 rounded text-white shadow">Shipped</span>';
                }
                if($order->status == 'delivered'){
                 $status = '<span class="bg-green-700 py-1 px-3 rounded text-white shadow">Delivered</span>';
@@ -149,28 +151,34 @@
           <thead>
             <tr>
               <th class="text-left font-semibold">Product</th>
-              <th class="text-left font-semibold">Price</th>
-              <th class="text-left font-semibold">Quantity</th>
+              <th class="hidden sm:table-cell text-left font-semibold whitespace-nowrap w-[90px]">Price</th>
+              <th class="hidden sm:table-cell text-left font-semibold w-[90px]">Quantity</th>
               <th class="text-left font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
 
-            @foreach ($order_items as $item)
+            @foreach ($order->items as $item)
               <tr wire:key="{{ $item->id }}">
               <td class="py-4">
-                <div class="flex items-center">
-                  <img class="h-16 w-16 mr-4" src="{{ url('storage', $item->product->images[0]) }}" alt="{{ $item->product->name }}">
-                  <span class="font-semibold">{{ $item->product->name }}</span>
+                <div class="flex items-center gap-3">
+                  <img class="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded" src="{{ url('storage', $item->product->images[0]) }}" alt="{{ $item->product->name }}">
+                  <span class="font-semibold text-sm sm:text-base line-clamp-2">{{ $item->product->name }}</span>
                 </div>
               </td>
-              <td class="py-4">
+              <td class="hidden sm:table-cell py-4 text-right whitespace-nowrap">
                 {{ Number::currency($item->unit_amount, 'IDR') }}
               </td>
-              <td class="py-4">
-                <span class="text-center w-8">{{ $item->quantity }}</span>
+
+              <td class="hidden sm:table-cell py-4 text-center">
+                <span class="inline-block min-w-[25px]">
+                  {{ $item->quantity }}
+                </span>
               </td>
-              <td class="py-4">{{ Number::currency($item->total_amount, 'IDR') }}</td>
+
+              <td class="py-4 text-right font-medium whitespace-nowrap">
+                {{ Number::currency($item->total_amount, 'IDR') }}
+              </td>
             </tr>
             @endforeach
             
@@ -180,7 +188,7 @@
 
       <div class="bg-white overflow-x-auto rounded-lg shadow-md p-6 mb-4">
         <h1 class="font-3xl font-bold text-slate-500 mb-3">Shipping Address</h1>
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
             <p>{{ $address->street_address }}, {{ $address->city }}, {{ $address->state }}, {{ $address->zip_code }}</p>
           </div>
@@ -193,27 +201,26 @@
 
     </div>
     <div class="md:w-1/4">
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="bg-white rounded-lg shadow-md p-6 sm:sticky sm:top-24">
         <h2 class="text-lg font-semibold mb-4">Summary</h2>
         <div class="flex justify-between mb-2">
           <span>Subtotal</span>
-          <span>{{ Number::currency($item->order->grand_total, 'IDR') }}</span>
+          <span>{{ Number::currency($order->grand_total, 'IDR') }}</span>
         </div>
         <div class="flex justify-between mb-2">
           <span>Taxes</span>
-          <span>₹0.00</span>
+          <span>{{ Number::currency(0, 'IDR') }}</span>
         </div>
         <div class="flex justify-between mb-2">
           <span>Shipping</span>
-          <span>₹0.00</span>
+          <span>{{ Number::currency(0, 'IDR') }}</span>
         </div>
         <hr class="my-2">
         <div class="flex justify-between mb-2">
-          <span class="font-semibold">Grand Total</span>
-          <span class="font-semibold">{{ Number::currency($item->order->grand_total, 'IDR') }}</span>
+          <span class="text-sm sm:text-base font-semibold">Grand Total</span>
+          <span class="font-semibold">{{ Number::currency($order->grand_total, 'IDR') }}</span>
         </div>
-{{-- @foreach ($order->items as $item)
- --}}
+
       </div>
     </div>
   </div>
