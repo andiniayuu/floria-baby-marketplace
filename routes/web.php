@@ -31,7 +31,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    
+
     Route::post('/logout', function () {
         Auth::logout();
 
@@ -43,7 +43,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/checkout', CheckoutPage::class);
     Route::get('/my-orders', MyOrdersPage::class);
-    Route::get('/my-orders/{order}', MyOrdersDetailPage::class);
+    Route::get('/my-orders/{order}', MyOrdersDetailPage::class)->name('my-orders.show');
     Route::get('/order/success', SuccessPage::class)->name('order.success');
     Route::get('/order/cancel', CancelPage::class)->name('order.cancel');
 });
