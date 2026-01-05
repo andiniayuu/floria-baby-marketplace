@@ -13,7 +13,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
-#[Title('Products - BabyShop')]
+#[Title('Products - FloriaBaby')]
 class ProductsPage extends Component
 {
     use WithPagination;

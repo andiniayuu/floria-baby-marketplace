@@ -8,7 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 
-#[Title('Cart - BabyShop')]
+#[Title('Cart - FloriaBaby')]
 
 class CartPage extends Component
 {
