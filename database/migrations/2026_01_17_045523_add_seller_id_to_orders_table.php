@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('addresses', function (Blueprint $table) {
-            $table->renameColumn('zip_kode', 'zip_code');
+        Schema::table('orders', function (Blueprint $table) {
+            if (!Schema::hasColumn('orders', 'seller_id')) {
+                $table->foreignId('seller_id')->nullable()->after('user_id')
+                    ->constrained('users')->cascadeOnDelete();
+            }
         });
     }
 
@@ -21,8 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('addresses', function (Blueprint $table) {
-            $table->renameColumn('zip_code', 'zip_kode');
+        Schema::table('orders', function (Blueprint $table) {
+            //
         });
     }
 };
