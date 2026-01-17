@@ -10,32 +10,46 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
+        'seller_id',
         'category_id',
         'brand_id',
         'name',
         'slug',
-        'images',
         'description',
         'price',
+        'stock',
+        'images',
         'is_active',
-        'is_feature',
-        'in_stock',
-        'on_sale',
     ];
 
     protected $casts = [
         'images' => 'array',
+        'price' => 'decimal:2',
     ];
 
-    public function category() {
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
 
-    public function brand() {
+    public function brand()
+    {
         return $this->belongsTo(Brand::class);
     }
 
-    public function OrderItem() {
+    public function orderItems()
+    {
         return $this->hasMany(OrderItem::class);
     }
 }

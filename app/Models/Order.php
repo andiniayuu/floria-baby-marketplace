@@ -10,26 +10,42 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 
+        'user_id',
+        'seller_id',
+        'order_number',
         'grand_total',
         'payment_method',
         'payment_status',
+        'payment_proof',
         'status',
-        'currency',
-        'shipping_amount',
+        'shipping_address',
         'shipping_method',
+        'shipping_amount',
+        'currency',
         'notes',
     ];
 
-    public function user() {
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    // Pembeli
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function items() {
-        return $this->hasMany(OrderItem::class);
+    // Seller / Owner
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
-    public function address() {
-        return $this->hasOne(Address::class);
+    // Item di dalam order
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }
