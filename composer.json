@@ -9,6 +9,8 @@
         "php": "^8.2",
         "doctrine/dbal": "^4.4",
         "filament/filament": "^3.3",
+        "filament/spatie-laravel-translatable-plugin": "*",
+        "flowframe/laravel-trend": "^0.4.0",
         "jantinnerezo/livewire-alert": "^4.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
