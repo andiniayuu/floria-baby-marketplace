@@ -18,34 +18,34 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class AdminPanelProvider extends PanelProvider
+class SellerPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('admin')
-            ->path('admin')
+            ->id('seller')
+            ->path('seller')
             ->login()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Amber,
                 'danger' => Color::Red,
                 'success' => Color::Green,
                 'warning' => Color::Orange,
             ])
-            ->brandName('Admin Panel')
-            ->brandLogo(asset('images/admin-logo.png'))
+            ->brandName('Seller Dashboard')
+            ->brandLogo(asset('images/seller-logo.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(asset('images/favicon.png'))
-            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
-            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
+            ->discoverResources(in: app_path('Filament/Seller/Resources'), for: 'App\\Filament\\Seller\\Resources')
+            ->discoverPages(in: app_path('Filament/Seller/Pages'), for: 'App\\Filament\\Seller\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Seller/Widgets'), for: 'App\\Filament\\Seller\\Widgets')
             ->widgets([
-                \App\Filament\Admin\Widgets\AdminStatsOverview::class,
-                \App\Filament\Admin\Widgets\AdminRevenueChart::class,
-                \App\Filament\Admin\Widgets\AdminLatestOrders::class,
+                \App\Filament\Seller\Widgets\SellerStatsOverview::class,
+                \App\Filament\Seller\Widgets\SellerRevenueChart::class,
+                \App\Filament\Seller\Widgets\SellerLatestOrders::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -60,29 +60,27 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                // \App\Http\Middleware\CheckAdminAccess::class,
+                // \App\Http\Middleware\CheckSellerAccess::class,
             ])
             ->authGuard('web')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
-                'Katalog Produk',
-                'Manajemen Produk',
-                'Transaksi',
-                'Manajemen User',
-                'Laporan & Statistik',
+                'Toko Saya',
+                'Pesanan',
+                'Laporan',
                 'Pengaturan',
             ])
             ->userMenuItems([
                 // 'profile' => \Filament\Navigation\MenuItem::make()
                 //     ->label('Edit Profile')
-                //     ->url(fn (): string => route('filament.admin.pages.profile'))
+                //     ->url(fn (): string => route('filament.seller.pages.profile'))
                 //     ->icon('heroicon-o-user-circle'),
-                // 'settings' => \Filament\Navigation\MenuItem::make()
-                //     ->label('Settings')
-                //     ->url(fn (): string => route('filament.admin.pages.settings'))
-                // ->icon('heroicon-o-cog-6-tooth'),
+                // 'store_settings' => \Filament\Navigation\MenuItem::make()
+                //     ->label('Pengaturan Toko')
+                //     ->url(fn (): string => route('filament.seller.pages.store-settings'))
+                //     ->icon('heroicon-o-building-storefront'),
             ])
             ->plugins([
                 // Add plugins here if needed
