@@ -31,6 +31,7 @@ class RegisterPage extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
+            'role' => 'user', // Default role adalah user
         ]);
 
         // Login User

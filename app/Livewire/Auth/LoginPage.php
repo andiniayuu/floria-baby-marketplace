@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Auth;
 
-use Livewire\Attributes\Title;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Title;
 
 #[Title('Login')]
 class LoginPage extends Component
@@ -12,18 +11,28 @@ class LoginPage extends Component
     public $email;
     public $password;
 
-    public function save()
+    public function login()
     {
         $this->validate([
-            'email' => 'required|email|max:255|exists:users,email',
-            'password' => 'required|min:6|max:255',
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            session()->flash('error', 'Invalid credentials');
-            return;
+        if (auth()->attempt(['email' => $this->email, 'password' => $this->password])) {
+            $user = auth()->user();
+
+            // Redirect berdasarkan role
+            if ($user->role === 'admin') {
+                return redirect('/admin');
+            } elseif ($user->role === 'seller') {
+                return redirect('/seller');
+            } else {
+                // User biasa redirect ke homepage
+                return redirect('/');
+            }
         }
-        return redirect()->intended();
+
+        $this->addError('email', 'Email atau password salah.');
     }
 
     public function render()
