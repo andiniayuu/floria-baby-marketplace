@@ -8,28 +8,21 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
+        // Cek apakah user sudah login
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('login'); // Frontend login, bukan Filament
         }
 
         $user = auth()->user();
-        
+
+        // Cek apakah role user sesuai dengan yang diizinkan
         if (in_array($user->role, $roles)) {
-            // Cek khusus untuk seller
-            if ($user->role === 'seller' && $user->seller_status !== 'approved') {
-                abort(403, 'Your seller account is pending approval');
-            }
-            
             return $next($request);
         }
 
-        abort(403, 'Unauthorized access');
+        // Jika role tidak sesuai, redirect ke homepage dengan error
+        return redirect('/')->with('error', 'You do not have permission to access this page.');
     }
 }
