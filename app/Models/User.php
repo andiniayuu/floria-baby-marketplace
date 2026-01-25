@@ -7,6 +7,8 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -89,6 +91,14 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->isAdmin() || $this->isSeller();
+        if ($this->is_banned) {
+            return false;
+        }
+
+        return match ($panel->getId()) {
+            'admin'  => $this->isAdmin(),
+            'seller' => $this->isSeller(),
+            default  => false,
+        };
     }
 }
