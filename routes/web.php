@@ -17,33 +17,41 @@ use App\Livewire\SuccessPage;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-Route::get('/', HomePage::class);
-Route::get('/categories', CategoriesPage::class);
-Route::get('/products', ProductsPage::class);
-Route::get('/cart', CartPage::class);
-Route::get('/products/{slug}', ProductsDetailPage::class);
+/*
+|--------------------------------------------------------------------------
+| FRONTEND ROUTES (USER / CUSTOMER)
+|--------------------------------------------------------------------------
+*/
 
+// Public
+Route::get('/', HomePage::class)->name('home');
+Route::get('/categories', CategoriesPage::class)->name('categories');
+Route::get('/products', ProductsPage::class)->name('products');
+Route::get('/products/{slug}', ProductsDetailPage::class)->name('products.detail');
+Route::get('/cart', CartPage::class)->name('cart');
+
+// Guest (Belum login)
 Route::middleware('guest')->group(function () {
     Route::get('/login', LoginPage::class)->name('login');
-    Route::get('/register', RegisterPage::class);
+    Route::get('/register', RegisterPage::class)->name('register');
     Route::get('/forgot', ForgotPasswordPage::class)->name('password.request');
     Route::get('/reset/{token}', ResetPasswordPage::class)->name('password.reset');
 });
 
-Route::middleware('auth')->group(function () {
-
-    Route::post('/logout', function () {
-        Auth::logout();
-
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        return redirect('/');
-    })->name('logout');
-
-    Route::get('/checkout', CheckoutPage::class);
-    Route::get('/my-orders', MyOrdersPage::class);
+// Authenticated USER
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/checkout', CheckoutPage::class)->name('checkout');
+    Route::get('/my-orders', MyOrdersPage::class)->name('my-orders');
     Route::get('/my-orders/{order_id}', MyOrdersDetailPage::class)->name('my-orders.show');
     Route::get('/order/success', SuccessPage::class)->name('order.success');
     Route::get('/order/cancel', CancelPage::class)->name('order.cancel');
 });
+
+// Logout (Frontend)
+Route::middleware('auth')->post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/');
+})->name('logout');
