@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
@@ -14,7 +15,10 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Admin
+        // Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        // Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
+        // Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        // // Admin
         User::create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
@@ -22,7 +26,7 @@ class RoleSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // Seller (Approved)
+        // // Seller (Approved)
         User::create([
             'name' => 'Seller Demo',
             'email' => 'seller@example.com',
@@ -33,7 +37,7 @@ class RoleSeeder extends Seeder
             'shop_description' => 'Ini adalah toko demo untuk testing',
         ]);
 
-        // User Biasa
+        // // User Biasa
         User::create([
             'name' => 'User Demo',
             'email' => 'user@example.com',
