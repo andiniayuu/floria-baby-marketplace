@@ -3,11 +3,18 @@
 namespace App\Filament\Seller\Resources\OrderResource\Pages;
 
 use App\Filament\Seller\Resources\OrderResource;
-use Filament\Resources\Pages\Page;
+use Filament\Actions;
+use Filament\Resources\Pages\ViewRecord;
 
-class ViewOrder extends Page
+
+class ViewOrder extends ViewRecord
 {
     protected static string $resource = OrderResource::class;
-
-    protected static string $view = 'filament.seller.resources.order-resource.pages.view-order';
+    
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\EditAction::make(),
+        ];
+    }
 }

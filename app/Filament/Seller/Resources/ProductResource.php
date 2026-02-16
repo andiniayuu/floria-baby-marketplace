@@ -4,6 +4,7 @@ namespace App\Filament\Seller\Resources;
 
 use App\Filament\Seller\Resources\ProductResource\Pages;
 use App\Models\Product;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -64,9 +65,15 @@ class ProductResource extends Resource
                             ->label('Gambar Produk')
                             ->image()
                             ->multiple()
+                            ->disk('public')
                             ->directory('products')
-                            ->maxSize(2048)
                             ->maxFiles(5)
+                            ->maxSize(2048)
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1200')
+                            ->imageResizeTargetHeight('675')
+                            ->optimize('webp')
                             ->reorderable()
                             ->columnSpanFull()
                             ->helperText('Upload maksimal 5 gambar, ukuran max 2MB per gambar'),
@@ -78,16 +85,16 @@ class ProductResource extends Resource
                         Forms\Components\TextInput::make('price')
                             ->label('Harga Jual')
                             ->required()
-                            ->numeric()
+                            ->integer()
                             ->prefix('Rp')
                             ->minValue(0),
 
-                        Forms\Components\TextInput::make('compare_price')
-                            ->label('Harga Coret (Opsional)')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->minValue(0)
-                            ->helperText('Harga sebelum diskon'),
+                        // Forms\Components\TextInput::make('compare_price')
+                        //     ->label('Harga Coret (Opsional)')
+                        //     ->numeric()
+                        //     ->prefix('Rp')
+                        //     ->minValue(0)
+                        //     ->helperText('Harga sebelum diskon'),
 
                         Forms\Components\TextInput::make('stock')
                             ->label('Stok')
@@ -96,19 +103,19 @@ class ProductResource extends Resource
                             ->minValue(0)
                             ->default(0),
 
-                        Forms\Components\TextInput::make('sku')
-                            ->label('SKU (Opsional)')
-                            ->maxLength(100)
-                            ->unique(Product::class, 'sku', ignoreRecord: true)
-                            ->helperText('Kode unik produk'),
+                        // Forms\Components\TextInput::make('sku')
+                        //     ->label('SKU (Opsional)')
+                        //     ->maxLength(100)
+                        //     ->unique(Product::class, 'sku', ignoreRecord: true)
+                        //     ->helperText('Kode unik produk'),
 
-                        Forms\Components\TextInput::make('weight')
-                            ->label('Berat (gram)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->suffix('gr')
-                            ->helperText('Untuk kalkulasi ongkir')
-                            ->required(),
+                        // Forms\Components\TextInput::make('weight')
+                        //     ->label('Berat (gram)')
+                        //     ->numeric()
+                        //     ->minValue(0)
+                        //     ->suffix('gr')
+                        //     ->helperText('Untuk kalkulasi ongkir')
+                        //     ->required(),
                     ])
                     ->columns(2),
 
@@ -162,7 +169,7 @@ class ProductResource extends Resource
 
                 Tables\Columns\TextColumn::make('price')
                     ->label('Harga')
-                    ->money('IDR')
+                    ->money('IDR', locale: 'id')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('stock')
@@ -212,7 +219,7 @@ class ProductResource extends Resource
                     ->query(fn(Builder $query): Builder => $query->where('stock', '<=', 0)),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -238,7 +245,9 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('seller_id', auth()->id());
+        return parent::getEloquentQuery()
+            ->where('seller_id', Filament::auth()->id())
+            ->with(['category', 'images', 'variants']);
     }
 
     public static function getPages(): array
@@ -246,7 +255,7 @@ class ProductResource extends Resource
         return [
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
-            'view' => Pages\ViewProduct::route('/{record}'),
+            // 'view' => Pages\ViewProduct::route('/{record}'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
         ];
     }

@@ -23,11 +23,9 @@ class OrderResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = static::getModel()::whereIn('status', ['confirmed', 'processing'])
-            ->whereHas('items', function ($query) {
-                $query->whereHas('product', function ($q) {
-                    $q->where('seller_id', auth()->id());
-                });
-            })
+
+            ->where('seller_id', auth()->id())
+
             ->count();
 
         return $count ?: null;
@@ -43,7 +41,8 @@ class OrderResource extends Resource
                             ->label('Nomor Pesanan')
                             ->disabled(),
 
-                        Forms\Components\TextInput::make('user.name')
+                        Forms\Components\Select::make('user_id')
+                            ->relationship('user', 'name')
                             ->label('Pelanggan')
                             ->disabled(),
 
@@ -61,7 +60,7 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('tracking_number')
                             ->label('Nomor Resi')
                             ->maxLength(255)
-                            ->visible(fn(Forms\Get $get) => in_array($get('status'), ['shipped'])),
+                            ->visible(fn(Forms\Get $get) => $get('status') === 'packed'),
 
                         Forms\Components\Textarea::make('notes')
                             ->label('Catatan Seller')
@@ -77,14 +76,18 @@ class OrderResource extends Resource
                             ->disabled()
                             ->rows(3),
 
+                        // Forms\Components\TextInput::make('shipping_method')
+                        //     ->label('Metode Pengiriman')
+                        //     ->disabled(),
                         Forms\Components\TextInput::make('shipping_method')
-                            ->label('Metode Pengiriman')
-                            ->disabled(),
+                            ->disabled()
+                            ->default('-'),
 
-                        Forms\Components\TextInput::make('total_amount')
+                        Forms\Components\TextInput::make('grand_total')
                             ->label('Total')
                             ->prefix('Rp')
                             ->disabled(),
+
                     ])
                     ->columns(2),
             ]);
@@ -112,8 +115,13 @@ class OrderResource extends Resource
                     ->badge()
                     ->color('info'),
 
-                Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make('total')
                     ->label('Total')
+                    ->getStateUsing(function (Order $record) {
+                        return $record->items
+                            ->filter(fn($item) => $item->product->seller_id == auth()->id())
+                            ->sum(fn($item) => $item->price * $item->quantity);
+                    })
                     ->money('IDR')
                     ->sortable(),
 
@@ -197,11 +205,8 @@ class OrderResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('payment_status', 'paid')
-            ->whereHas('items', function ($query) {
-                $query->whereHas('product', function ($q) {
-                    $q->where('seller_id', auth()->id());
-                });
+            ->whereHas('items.product', function ($q) {
+                $q->where('seller_id', auth()->id());
             });
     }
 

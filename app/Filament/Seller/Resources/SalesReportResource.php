@@ -23,6 +23,39 @@ class SalesReportResource extends Resource
     {
         return $table
             ->query(self::getReportQuery())
+
+            ->headerActions([
+                Tables\Actions\Action::make('export_excel')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(
+                        fn($livewire) =>
+                        \Maatwebsite\Excel\Facades\Excel::download(
+                            new \App\Exports\SellerSalesReportExport(
+                                $livewire->getFilteredTableQuery()
+                            ),
+                            'laporan-penjualan.xlsx'
+                        )
+                    ),
+
+                Tables\Actions\Action::make('export_pdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('danger')
+                    ->action(
+                        fn($livewire) =>
+                        response()->streamDownload(function () use ($livewire) {
+                            $orders = $livewire->getFilteredTableQuery()->with('user')->get();
+
+                            echo \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                                'filament.seller.pages.sales-report-pdf',
+                                compact('orders')
+                            )->output();
+                        }, 'laporan-penjualan.pdf')
+                    ),
+            ])
+
             ->columns([
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('No. Pesanan')
@@ -49,7 +82,7 @@ class SalesReportResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'completed' => 'success',
                         'shipped' => 'info',
                         default => 'warning',
@@ -71,8 +104,8 @@ class SalesReportResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['date_from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-                            ->when($data['date_until'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
+                            ->when($data['date_from'], fn($q, $date) => $q->whereDate('created_at', '>=', $date))
+                            ->when($data['date_until'], fn($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
             ])
             ->actions([
