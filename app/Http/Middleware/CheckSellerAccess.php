@@ -15,25 +15,30 @@ class CheckSellerAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
-
-        // Cek apakah user adalah seller
-        if (!$user || $user->role !== 'seller') {
-            auth()->logout();
-            return redirect()->route('filament.seller.auth.login')
-                ->with('error', 'Anda tidak memiliki akses ke Seller Dashboard.');
+        // 1. Pastikan user login
+        if (!auth()->check()) {
+            return redirect()->route('filament.seller.auth.login');
         }
 
-        // Cek apakah seller sudah diapprove
-        if (($user->seller_info['status'] ?? '') !== 'approved') {
+        $user = auth()->user();
+
+        // 2. Cek role seller
+        if ($user->role !== 'seller') {
+            abort(403, 'Anda bukan seller. Silakan ajukan pendaftaran seller.');
+        }
+
+        // 3. Cek status approval seller
+        if ($user->seller_status !== 'approved') {
             auth()->logout();
+
             return redirect()->route('filament.seller.auth.login')
                 ->with('error', 'Akun Seller Anda belum disetujui oleh Admin.');
         }
 
-        // Cek apakah user dibanned
+        // 4. Cek apakah akun dibanned
         if ($user->is_banned) {
             auth()->logout();
+
             return redirect()->route('filament.seller.auth.login')
                 ->with('error', 'Akun Anda telah dinonaktifkan.');
         }
