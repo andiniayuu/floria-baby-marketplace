@@ -3,119 +3,264 @@
 namespace App\Livewire;
 
 use App\Helpers\CartManagement;
-use App\Mail\OrderPlaced;
-use App\Models\Address;
+use App\Models\UserAddress;
 use App\Models\Order;
-use Illuminate\Support\Facades\Mail;
-use Stripe\Checkout\Session as StripeSession;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Stripe\Stripe;
 
-#[Title('Checkout')]
+#[Title('Checkout - FloriaBaby')]
 class CheckoutPage extends Component
 {
+    // Checkout items dari session
+    public $checkout_items = [];
+    public $checkout_total = 0;
 
-    public $first_name;
-    public $last_name;
-    public $phone;
-    public $street_address;
-    public $city;
-    public $state;
-    public $zip_code;
-    public $payment_method;
+    // Form fields
+    public $selected_address_id;
+    public $shipping_method = 'regular';
+    public $payment_method = 'midtrans'; // ✅ SET DEFAULT VALUE
+    public $notes;
 
-    public function mount() {
-        $cart_items = CartManagement::getCartItemsFromCookie();
-        if (count($cart_items) == 0) {
-            return redirect('/products');
+    // Addresses
+    public $addresses;
+
+    // Shipping costs
+    public $shipping_costs = [
+        'regular' => 15000,
+        'express' => 25000,
+    ];
+
+    /**
+     * Mount
+     */
+    public function mount()
+    {
+        // 1️⃣ Cek checkout items
+        $this->checkout_items = session('checkout_items', []);
+        $this->checkout_total = session('checkout_total', 0);
+        $checkout_timestamp = session('checkout_timestamp');
+
+        // 2️⃣ Validasi session
+        if (
+            empty($this->checkout_items) ||
+            !$checkout_timestamp ||
+            (now()->timestamp - $checkout_timestamp) > 1800
+        ) {
+            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
+            session()->flash('error', 'Your checkout session has expired. Please try again.');
+            return redirect()->route('cart');
+        }
+
+        // 3️⃣ Validasi stock
+        $this->validateCheckoutItems();
+
+        // 4️⃣ Load addresses
+        $this->addresses = UserAddress::where('user_id', auth()->id())
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 5️⃣ Auto-select primary address
+        $primaryAddress = $this->addresses->firstWhere('is_primary', true);
+        if ($primaryAddress) {
+            $this->selected_address_id = $primaryAddress->id;
         }
     }
 
-    public function placeOrder()
+    /**
+     * Validasi stock real-time
+     */
+    protected function validateCheckoutItems()
     {
-        $this->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'phone' => 'required',
-            'street_address' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'zip_code' => 'required',
-            'payment_method' => 'required',
-        ]);
+        $productIds = collect($this->checkout_items)->pluck('product_id');
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-        $cart_items = CartManagement::getCartItemsFromCookie();
+        $hasChanges = false;
+        $removedItems = [];
 
-        $line_items = [];
+        foreach ($this->checkout_items as $key => $item) {
+            $product = $products->get($item['product_id']);
 
-        foreach ($cart_items as $item) {
-            $line_items[] = [
-                'price_data' => [
-                    'currency' => 'idr',
-                    'unit_amount' => $item['unit_amount'] * 100,
-                    'product_data' => [
-                        'name' => $item['name'],
-                    ]
-                ],
-                'quantity' => $item['quantity'],
-            ];
+            if (!$product) {
+                unset($this->checkout_items[$key]);
+                $removedItems[] = $item['name'];
+                $hasChanges = true;
+                continue;
+            }
+
+            if ($product->stock < $item['quantity']) {
+                if ($product->stock > 0) {
+                    $this->checkout_items[$key]['quantity'] = $product->stock;
+                    $this->checkout_items[$key]['total_amount'] = $product->stock * $item['unit_amount'];
+                    $hasChanges = true;
+                    session()->flash('warning', "{$item['name']} quantity adjusted to {$product->stock}");
+                } else {
+                    unset($this->checkout_items[$key]);
+                    $removedItems[] = $item['name'];
+                    $hasChanges = true;
+                }
+            }
+
+            if ($product->price != $item['unit_amount']) {
+                $this->checkout_items[$key]['unit_amount'] = $product->price;
+                $this->checkout_items[$key]['total_amount'] = $item['quantity'] * $product->price;
+                $hasChanges = true;
+            }
         }
 
-        $order = new Order();
-        $order->user_id = auth()->user()->id;
-        $order->grand_total = CartManagement::calculateGrandTotal($cart_items);
-        $order->payment_method = $this->payment_method;
-        $order->payment_status = 'pending';
-        $order->status = 'new';
-        $order->currency = 'idr';
-        $order_shipping_amount = 0;
-        $order->shipping_method = 'none';
-        $order->notes = 'Order place by' . auth()->user()->name;
+        $this->checkout_items = array_values($this->checkout_items);
 
-        $address = new Address();
-        $address->first_name = $this->first_name;
-        $address->last_name = $this->last_name;
-        $address->phone = $this->phone;
-        $address->street_address = $this->street_address;
-        $address->city = $this->city;
-        $address->state = $this->state;
-        $address->zip_code = $this->zip_code;
-
-        $redirect_url = '';
-
-        if ($this->payment_method == 'stripe') {
-            Stripe::setApiKey(env('STRIPE_SECRET'));
-            $sessionCheckout = StripeSession::create([
-                'payment_method_types' => ['card'],
-                'customer_email' => auth()->user()->email,
-                'line_items' => $line_items,
-                'mode' => 'payment',
-                'success_url' => env('APP_URL') . '/order/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => env('APP_URL') . '/order/cancel',
+        if ($hasChanges) {
+            $this->checkout_total = collect($this->checkout_items)->sum('total_amount');
+            session([
+                'checkout_items' => $this->checkout_items,
+                'checkout_total' => $this->checkout_total
             ]);
 
-            $redirect_url = $sessionCheckout->url;
-        } else {
-            $redirect_url = route('order.success');
+            if (!empty($removedItems)) {
+                session()->flash('error', 'Some items were removed: ' . implode(', ', $removedItems));
+            }
         }
 
-        $order->save();
-        $address->order_id = $order->id;
-        $address->save();
-        $order->items()->createMany($cart_items);
-        CartManagement::clearCartItems();
-        Mail::to(request()->user())->send(new OrderPlaced($order));
-        return redirect($redirect_url);
+        if (empty($this->checkout_items)) {
+            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
+            session()->flash('error', 'No items available for checkout.');
+            return redirect()->route('cart');
+        }
+    }
+
+    /**
+     * Process Order
+     */
+    public function placeOrder()
+    {
+        // 1️⃣ Validasi
+        $this->validate([
+            'selected_address_id' => 'required|exists:user_addresses,id',
+            'shipping_method' => 'required|in:regular,express',
+            'payment_method' => 'required|in:midtrans,cod,transfer',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        // ✅ LOG 1: Cek payment method
+        \Log::info('Payment Method Selected:', ['method' => $this->payment_method]);
+
+        // 2️⃣ Load address
+        $address = UserAddress::where('id', $this->selected_address_id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$address) {
+            session()->flash('error', 'Invalid address selected.');
+            return;
+        }
+
+        // 3️⃣ DB Transaction
+        DB::beginTransaction();
+
+        try {
+            // ... (kode validasi stock) ...
+
+            // Calculate totals
+            $subtotal = collect($this->checkout_items)->sum('total_amount');
+            $shipping_amount = $this->shipping_costs[$this->shipping_method];
+            $grand_total = $subtotal + $shipping_amount;
+
+            // Create Order
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'address_id' => $address->id,
+                'grand_total' => $grand_total,
+                'subtotal' => $subtotal,
+                'total_amount' => $grand_total,
+                'payment_method' => $this->payment_method,
+                'payment_status' => 'pending',
+                'status' => 'pending',
+                'currency' => 'IDR',
+                'shipping_method' => $this->shipping_method,
+                'shipping_amount' => $shipping_amount,
+                'shipping_cost' => $shipping_amount,
+                'notes' => $this->notes,
+                'shipping_address' => $address->formatted_address,
+            ]);
+
+            // ✅ LOG 2: Cek order created
+            \Log::info('Order Created:', [
+                'order_id' => $order->id,
+                'payment_method' => $order->payment_method
+            ]);
+
+            // Create Order Items & Decrease Stock
+            foreach ($this->checkout_items as $item) {
+                $order->items()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_amount' => $item['unit_amount'],
+                    'total_amount' => $item['total_amount'],
+                ]);
+
+                $product = Product::find($item['product_id']);
+                $product->decrement('stock', $item['quantity']);
+            }
+
+            // Remove dari cart
+            foreach ($this->checkout_items as $item) {
+                CartManagement::removeCartItem($item['product_id']);
+            }
+
+            // Clear session
+            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
+
+            DB::commit();
+
+            // ✅ LOG 3: Cek redirect condition
+            \Log::info('Before Redirect:', [
+                'payment_method' => $this->payment_method,
+                'is_midtrans' => $this->payment_method === 'midtrans',
+                'order_id' => $order->id
+            ]);
+
+            // REDIRECT BERDASARKAN PAYMENT METHOD
+            if ($this->payment_method === 'midtrans') {
+                \Log::info('Redirecting to Midtrans payment page');
+                return redirect()->route('user.payment', ['order' => $order->id]);
+            }
+
+            // Untuk COD/Transfer
+            \Log::info('Redirecting to success page');
+            session()->flash('success', 'Order placed successfully!');
+            return redirect()->route('user.order.success', ['order_id' => $order->id]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Order Creation Failed:', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Order failed: ' . $e->getMessage());
+            $this->validateCheckoutItems();
+            return null;
+        }
+    }
+
+    /**
+     * Computed properties
+     */
+    public function getSubtotalProperty()
+    {
+        return collect($this->checkout_items)->sum('total_amount');
+    }
+
+    public function getShippingCostProperty()
+    {
+        return $this->shipping_costs[$this->shipping_method] ?? 0;
+    }
+
+    public function getGrandTotalProperty()
+    {
+        return $this->subtotal + $this->shipping_cost;
     }
 
     public function render()
     {
-        $cart_items = CartManagement::getCartItemsFromCookie();
-        $grand_total = CartManagement::calculateGrandTotal($cart_items);
-        return view('livewire.checkout-page', [
-            'cart_items' => $cart_items,
-            'grand_total' => $grand_total,
-        ]);
+        return view('livewire.checkout-page');
     }
 }
