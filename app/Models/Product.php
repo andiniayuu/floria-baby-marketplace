@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,14 +19,24 @@ class Product extends Model
         'description',
         'price',
         'stock',
+        'sku',
         'images',
         'is_active',
     ];
 
     protected $casts = [
         'images' => 'array',
-        'price' => 'decimal:2',
     ];
+    protected static function booted()
+    {
+        static::creating(function ($product) {
+            if (Filament::auth()->check()) {
+                $product->seller_id = Filament::auth()->id();
+            }
+        });
+    }
+
+
 
     /*
     |--------------------------------------------------------------------------
