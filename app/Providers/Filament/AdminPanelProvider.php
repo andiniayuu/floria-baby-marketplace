@@ -23,6 +23,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default()
             ->id('admin')
             ->path('admin')
             ->login()
@@ -32,8 +33,9 @@ class AdminPanelProvider extends PanelProvider
                 'success' => Color::Green,
                 'warning' => Color::Orange,
             ])
-            ->brandName('Admin Panel')
-            ->brandLogo(asset('images/admin-logo.png'))
+            ->authGuard('admin')
+            ->brandName('Floria Baby')
+            ->brandLogo(asset('images/baby-boy.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(asset('images/favicon.png'))
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')

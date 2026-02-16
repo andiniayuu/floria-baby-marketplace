@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\User;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -32,8 +33,8 @@ class SellerPanelProvider extends PanelProvider
                 'success' => Color::Green,
                 'warning' => Color::Orange,
             ])
-            ->brandName('Seller Dashboard')
-            ->brandLogo(asset('images/seller-logo.png'))
+            ->brandName('Floria Baby - Seller')
+            ->brandLogo(asset('images/baby-boy.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(asset('images/favicon.png'))
             ->discoverResources(in: app_path('Filament/Seller/Resources'), for: 'App\\Filament\\Seller\\Resources')
@@ -73,6 +74,10 @@ class SellerPanelProvider extends PanelProvider
                 'Pengaturan',
             ])
             ->userMenuItems([
+                'profile' => \Filament\Navigation\MenuItem::make()
+                    ->label('Lihat Toko Saya')
+                    ->url(fn(): string => route('user.profile.index'))
+                    ->icon('heroicon-o-user-circle'),
                 // 'profile' => \Filament\Navigation\MenuItem::make()
                 //     ->label('Edit Profile')
                 //     ->url(fn (): string => route('filament.seller.pages.profile'))
@@ -81,9 +86,6 @@ class SellerPanelProvider extends PanelProvider
                 //     ->label('Pengaturan Toko')
                 //     ->url(fn (): string => route('filament.seller.pages.store-settings'))
                 //     ->icon('heroicon-o-building-storefront'),
-            ])
-            ->plugins([
-                // Add plugins here if needed
             ]);
     }
 }
