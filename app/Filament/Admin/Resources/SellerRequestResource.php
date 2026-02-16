@@ -35,7 +35,8 @@ class SellerRequestResource extends Resource
 
                         Forms\Components\TextInput::make('user.name')
                             ->label('Nama Pemohon')
-                            ->disabled(),
+                            ->disabled()
+                            ->placeholder(fn(SellerRequest $record) => $record->user?->name),
 
                         Forms\Components\TextInput::make('store_name')
                             ->label('Nama Toko')
@@ -129,15 +130,20 @@ class SellerRequestResource extends Resource
                     ->modalHeading('Setujui Pengajuan Seller')
                     ->modalDescription('Apakah Anda yakin ingin menyetujui pengajuan ini?')
                     ->action(function (SellerRequest $record) {
+
+                        // Update status pengajuan
                         $record->update([
                             'status' => 'approved',
                             'reviewed_at' => now(),
                             'reviewed_by' => auth()->id(),
                         ]);
 
-                        // Update user role menjadi seller
+                        // Pindahkan data toko ke tabel users
                         $record->user->update([
                             'role' => 'seller',
+                            'seller_status' => 'approved',
+                            'shop_name' => $record->store_name,
+                            'shop_description' => $record->store_description,
                         ]);
 
                         Notification::make()

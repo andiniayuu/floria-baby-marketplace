@@ -37,24 +37,24 @@ class OrderResource extends Resource
                         Forms\Components\Select::make('user_id')
                             ->label('Pelanggan')
                             ->relationship('user', 'name')
-                            ->disabled(),
+                           ->disabled(),
 
-                        Forms\Components\Select::make('status')
-                            ->label('Status Pesanan')
-                            ->options([
-                                'pending' => 'Menunggu Pembayaran',
-                                'payment_uploaded' => 'Bukti Pembayaran Diupload',
-                                'confirmed' => 'Dikonfirmasi',
-                                'processing' => 'Diproses',
-                                'packed' => 'Dikemas',
-                                'shipped' => 'Dikirim',
-                                'delivered' => 'Sampai',
-                                'completed' => 'Selesai',
-                                'cancelled' => 'Dibatalkan',
-                                'rejected' => 'Ditolak',
-                            ])
-                            ->required()
-                            ->native(false),
+                        // Forms\Components\Select::make('status')
+                        //     ->label('Status Pesanan')
+                        //     ->options([
+                        //         'pending' => 'Menunggu Pembayaran',
+                        //         'payment_uploaded' => 'Bukti Pembayaran Diupload',
+                        //         'confirmed' => 'Dikonfirmasi',
+                        //         'processing' => 'Diproses',
+                        //         'packed' => 'Dikemas',
+                        //         'shipped' => 'Dikirim',
+                        //         'delivered' => 'Sampai',
+                        //         'completed' => 'Selesai',
+                        //         'cancelled' => 'Dibatalkan',
+                        //         'rejected' => 'Ditolak',
+                        //     ])
+                        //     ->required()
+                        //     ->native(false),
 
                         Forms\Components\Select::make('payment_status')
                             ->label('Status Pembayaran')
@@ -67,9 +67,10 @@ class OrderResource extends Resource
                             ->required()
                             ->native(false),
 
-                        Forms\Components\TextInput::make('tracking_number')
-                            ->label('Nomor Resi')
-                            ->maxLength(255),
+                        Forms\Components\Placeholder::make('tracking_number')
+                            ->label('No Resi')
+                            ->content(fn($record) => $record?->tracking_number ?? '- Belum Dikirim -'),
+
 
                         Forms\Components\Textarea::make('notes')
                             ->label('Catatan Admin')
@@ -86,19 +87,21 @@ class OrderResource extends Resource
                             ->rows(3),
 
                         Forms\Components\TextInput::make('shipping_method')
-                            ->label('Metode Pengiriman')
-                            ->disabled(),
+                            ->disabled()
+                            ->default('-'),
 
-                        Forms\Components\TextInput::make('shipping_cost')
-                            ->label('Ongkir')
+                        Forms\Components\TextInput::make('shipping_amount')
+                            ->label('ongkir')
+                            ->disabled()
                             ->prefix('Rp')
-                            ->disabled(),
+                            ->default(0),
+
                     ])
                     ->columns(2),
 
                 Forms\Components\Section::make('Informasi Pembayaran')
                     ->schema([
-                        Forms\Components\TextInput::make('total_amount')
+                        Forms\Components\TextInput::make('grand_total')
                             ->label('Total Pembayaran')
                             ->prefix('Rp')
                             ->disabled(),
@@ -145,22 +148,23 @@ class OrderResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'payment_uploaded' => 'info',
-                        'confirmed' => 'primary',
-                        'processing' => 'warning',
-                        'packed' => 'warning',
-                        'shipped' => 'info',
-                        'delivered' => 'success',
-                        'completed' => 'success',
-                        'cancelled' => 'danger',
-                        'rejected' => 'danger',
-                    })
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('status')
+                //     ->label('Status')
+                //     ->badge()
+                //     ->color(fn(string $state): string => match ($state) {
+                //         'new' => 'gray',
+                //         'pending' => 'gray',
+                //         'payment_uploaded' => 'info',
+                //         'confirmed' => 'primary',
+                //         'processing' => 'warning',
+                //         'packed' => 'warning',
+                //         'shipped' => 'info',
+                //         'delivered' => 'success',
+                //         'completed' => 'success',
+                //         'cancelled' => 'danger',
+                //         'rejected' => 'danger',
+                //     })
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Pembayaran')

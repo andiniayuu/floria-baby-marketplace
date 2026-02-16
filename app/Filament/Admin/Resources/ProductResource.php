@@ -70,11 +70,19 @@ class ProductResource extends Resource
                             ->label('Gambar Produk')
                             ->image()
                             ->multiple()
+                            ->disk('public')
                             ->directory('products')
-                            ->maxSize(2048)
                             ->maxFiles(5)
+                            ->maxSize(2048)
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1200')
+                            ->imageResizeTargetHeight('675')
+                            ->optimize('webp')
                             ->reorderable()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->helperText('Upload maksimal 5 gambar, ukuran max 2MB per gambar'),
+
                     ])
                     ->columns(2),
 
@@ -87,11 +95,11 @@ class ProductResource extends Resource
                             ->prefix('Rp')
                             ->minValue(0),
 
-                        Forms\Components\TextInput::make('compare_price')
-                            ->label('Harga Coret')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->minValue(0),
+                        // Forms\Components\TextInput::make('compare_price')
+                        //     ->label('Harga Coret')
+                        //     ->numeric()
+                        //     ->prefix('Rp')
+                        //     ->minValue(0),
 
                         Forms\Components\TextInput::make('in_stock')
                             ->label('Stok')
@@ -100,16 +108,16 @@ class ProductResource extends Resource
                             ->minValue(0)
                             ->default(0),
 
-                        Forms\Components\TextInput::make('sku')
-                            ->label('SKU')
-                            ->maxLength(100)
-                            ->unique(Product::class, 'sku', ignoreRecord: true),
+                        // Forms\Components\TextInput::make('sku')
+                        //     ->label('SKU')
+                        //     ->maxLength(100)
+                        //     ->unique(Product::class, 'sku', ignoreRecord: true),
 
-                        Forms\Components\TextInput::make('weight')
-                            ->label('Berat (gram)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->suffix('gr'),
+                        // Forms\Components\TextInput::make('weight')
+                        //     ->label('Berat (gram)')
+                        //     ->numeric()
+                        //     ->minValue(0)
+                        //     ->suffix('gr'),
                     ])
                     ->columns(2),
 

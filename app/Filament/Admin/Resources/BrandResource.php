@@ -3,25 +3,6 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\BrandResource\Pages;
-use App\Filament\Admin\Resources\BrandResource\RelationManagers;
-use App\Models\Brand;
-use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-
-namespace App\Filament\Admin\Resources;
-
-use App\Filament\Admin\Resources\BrandResource\Pages;
 use App\Models\Brand;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -49,7 +30,8 @@ class BrandResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => 
+                            ->afterStateUpdated(
+                                fn(string $operation, $state, Forms\Set $set) =>
                                 $operation === 'create' ? $set('slug', Str::slug($state)) : null
                             ),
 
@@ -59,23 +41,24 @@ class BrandResource extends Resource
                             ->maxLength(255)
                             ->unique(Brand::class, 'slug', ignoreRecord: true),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Deskripsi')
-                            ->rows(3)
-                            ->maxLength(500)
-                            ->columnSpanFull(),
+                        // Forms\Components\Textarea::make('description')
+                        //     ->label('Deskripsi')
+                        //     ->rows(3)
+                        //     ->maxLength(500)
+                        //     ->columnSpanFull(),
 
-                        Forms\Components\FileUpload::make('images')
+                        Forms\Components\FileUpload::make('image')
                             ->label('Logo Brand')
                             ->image()
+                            ->disk('public')
                             ->directory('brands')
                             ->maxSize(2048)
                             ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('website')
-                            ->label('Website')
-                            ->url()
-                            ->maxLength(255),
+                        // Forms\Components\TextInput::make('website')
+                        //     ->label('Website')
+                        //     ->url()
+                        //     ->maxLength(255),
 
                         Forms\Components\Toggle::make('is_active')
                             ->label('Aktif')
