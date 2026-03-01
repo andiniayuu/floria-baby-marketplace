@@ -299,6 +299,19 @@ class CartPage extends Component
             'checkout_timestamp' => now()->timestamp
         ]);
 
+        foreach ($this->selectedItems as $product_id) {
+            CartManagement::removeCartItem($product_id);
+        }
+        
+        // Reload cart items di component
+        $this->loadCartItems();
+        $this->selectedItems = [];
+        $this->selectAll = false;
+
+        // Update navbar count
+        $this->dispatch('update-cart-count', total_count: count($this->cart_items))
+            ->to(Navbar::class);
+
         // 6️⃣ Redirect ke halaman checkout
         return redirect()->route('user.checkout');
     }

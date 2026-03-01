@@ -7,260 +7,357 @@ use App\Models\UserAddress;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 #[Title('Checkout - FloriaBaby')]
 class CheckoutPage extends Component
 {
-    // Checkout items dari session
     public $checkout_items = [];
     public $checkout_total = 0;
 
-    // Form fields
     public $selected_address_id;
     public $shipping_method = 'regular';
-    public $payment_method = 'midtrans'; // ✅ SET DEFAULT VALUE
+    public $payment_method  = 'midtrans';
     public $notes;
 
-    // Addresses
     public $addresses;
 
-    // Shipping costs
-    public $shipping_costs = [
-        'regular' => 15000,
-        'express' => 25000,
+    // =====================================================
+    // Tarif ongkir per kg (dalam gram → dibulatkan ke atas)
+    // =====================================================
+    const SHIPPING_RATE = [
+        'regular' => ['per_kg' => 8000,  'min' => 15000, 'label' => 'Reguler', 'eta' => '3-5 hari kerja'],
+        'express' => ['per_kg' => 15000, 'min' => 25000, 'label' => 'Express', 'eta' => '1-2 hari kerja'],
     ];
 
-    /**
-     * Mount
-     */
+    const DEFAULT_WEIGHT = 500; // gram, jika produk tidak punya berat
+
     public function mount()
     {
-        // 1️⃣ Cek checkout items
         $this->checkout_items = session('checkout_items', []);
         $this->checkout_total = session('checkout_total', 0);
-        $checkout_timestamp = session('checkout_timestamp');
+        $checkout_timestamp   = session('checkout_timestamp');
 
-        // 2️⃣ Validasi session
         if (
             empty($this->checkout_items) ||
             !$checkout_timestamp ||
             (now()->timestamp - $checkout_timestamp) > 1800
         ) {
             session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
-            session()->flash('error', 'Your checkout session has expired. Please try again.');
+            session()->flash('error', 'Sesi checkout kamu sudah kedaluwarsa.');
             return redirect()->route('cart');
         }
 
-        // 3️⃣ Validasi stock
         $this->validateCheckoutItems();
 
-        // 4️⃣ Load addresses
         $this->addresses = UserAddress::where('user_id', auth()->id())
             ->orderBy('is_primary', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->get();
 
-        // 5️⃣ Auto-select primary address
         $primaryAddress = $this->addresses->firstWhere('is_primary', true);
         if ($primaryAddress) {
             $this->selected_address_id = $primaryAddress->id;
         }
     }
 
-    /**
-     * Validasi stock real-time
-     */
     protected function validateCheckoutItems()
     {
         $productIds = collect($this->checkout_items)->pluck('product_id');
-        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
-
-        $hasChanges = false;
-        $removedItems = [];
+        $products   = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
         foreach ($this->checkout_items as $key => $item) {
             $product = $products->get($item['product_id']);
 
-            if (!$product) {
+            if (!$product || $product->stock <= 0) {
                 unset($this->checkout_items[$key]);
-                $removedItems[] = $item['name'];
-                $hasChanges = true;
                 continue;
             }
 
             if ($product->stock < $item['quantity']) {
-                if ($product->stock > 0) {
-                    $this->checkout_items[$key]['quantity'] = $product->stock;
-                    $this->checkout_items[$key]['total_amount'] = $product->stock * $item['unit_amount'];
-                    $hasChanges = true;
-                    session()->flash('warning', "{$item['name']} quantity adjusted to {$product->stock}");
-                } else {
-                    unset($this->checkout_items[$key]);
-                    $removedItems[] = $item['name'];
-                    $hasChanges = true;
-                }
+                $this->checkout_items[$key]['quantity'] = $product->stock;
             }
 
             if ($product->price != $item['unit_amount']) {
                 $this->checkout_items[$key]['unit_amount'] = $product->price;
-                $this->checkout_items[$key]['total_amount'] = $item['quantity'] * $product->price;
-                $hasChanges = true;
             }
+
+            // Simpan weight per item untuk kalkulasi
+            $this->checkout_items[$key]['weight']       = $product->weight ?? self::DEFAULT_WEIGHT;
+            $this->checkout_items[$key]['total_amount'] =
+                $this->checkout_items[$key]['quantity'] * $this->checkout_items[$key]['unit_amount'];
         }
 
         $this->checkout_items = array_values($this->checkout_items);
-
-        if ($hasChanges) {
-            $this->checkout_total = collect($this->checkout_items)->sum('total_amount');
-            session([
-                'checkout_items' => $this->checkout_items,
-                'checkout_total' => $this->checkout_total
-            ]);
-
-            if (!empty($removedItems)) {
-                session()->flash('error', 'Some items were removed: ' . implode(', ', $removedItems));
-            }
-        }
+        $this->checkout_total = collect($this->checkout_items)->sum('total_amount');
 
         if (empty($this->checkout_items)) {
-            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
-            session()->flash('error', 'No items available for checkout.');
             return redirect()->route('cart');
         }
     }
 
+    // =====================================================
+    // COMPUTED PROPERTIES
+    // =====================================================
+
+    public function getSubtotalProperty(): int
+    {
+        return (int) collect($this->checkout_items)->sum('total_amount');
+    }
+
     /**
-     * Process Order
+     * Total berat semua item dalam gram
      */
+    public function getTotalWeightProperty(): int
+    {
+        $total = 0;
+        foreach ($this->checkout_items as $item) {
+            $weight = $item['weight'] ?? self::DEFAULT_WEIGHT;
+            $total += $weight * $item['quantity'];
+        }
+        return max($total, 1);
+    }
+
+    /**
+     * Berat dalam kg (dibulatkan ke atas, min 1kg)
+     */
+    public function getTotalWeightKgProperty(): int
+    {
+        return (int) ceil($this->totalWeight / 1000);
+    }
+
+    /**
+     * Kalkulasi ongkir berdasarkan berat & metode
+     */
+    public function getShippingCostProperty(): int
+    {
+        $rate      = self::SHIPPING_RATE[$this->shipping_method] ?? self::SHIPPING_RATE['regular'];
+        $weightKg  = $this->totalWeightKg;
+        $calculated = $weightKg * $rate['per_kg'];
+
+        return max($calculated, $rate['min']);
+    }
+
+    public function getGrandTotalProperty(): int
+    {
+        return $this->subtotal + $this->shippingCost;
+    }
+
+    public function getPrimaryAddressProperty()
+    {
+        return $this->addresses?->firstWhere('is_primary', true);
+    }
+
+    /**
+     * Info lengkap shipping cost untuk ditampilkan di UI
+     */
+    public function getShippingInfoProperty(): array
+    {
+        $rate     = self::SHIPPING_RATE[$this->shipping_method] ?? self::SHIPPING_RATE['regular'];
+        $weightKg = $this->totalWeightKg;
+
+        return [
+            'weight_gram' => $this->totalWeight,
+            'weight_kg'   => $weightKg,
+            'rate_per_kg' => $rate['per_kg'],
+            'calculated'  => $weightKg * $rate['per_kg'],
+            'minimum'     => $rate['min'],
+            'final'       => $this->shippingCost,
+            'label'       => $rate['label'],
+            'eta'         => $rate['eta'],
+        ];
+    }
+
+    // =====================================================
+    // PLACE ORDER Utama saat order
+    // =====================================================
+
     public function placeOrder()
     {
-        // 1️⃣ Validasi
-        $this->validate([
-            'selected_address_id' => 'required|exists:user_addresses,id',
-            'shipping_method' => 'required|in:regular,express',
-            'payment_method' => 'required|in:midtrans,cod,transfer',
-            'notes' => 'nullable|string|max:500',
+        Log::info('placeOrder() dipanggil', [
+            'payment_method'      => $this->payment_method,
+            'selected_address_id' => $this->selected_address_id,
+            'total_weight'        => $this->totalWeight,
+            'shipping_cost'       => $this->shippingCost,
+            'grand_total'         => $this->grandTotal,
         ]);
 
-        // ✅ LOG 1: Cek payment method
-        \Log::info('Payment Method Selected:', ['method' => $this->payment_method]);
+        // 1. Validasi alamat
+        if (empty($this->selected_address_id)) {
+            $this->addError('selected_address_id', 'Pilih alamat pengiriman terlebih dahulu.');
+            return;
+        }
 
-        // 2️⃣ Load address
         $address = UserAddress::where('id', $this->selected_address_id)
             ->where('user_id', auth()->id())
             ->first();
 
         if (!$address) {
-            session()->flash('error', 'Invalid address selected.');
+            $this->addError('selected_address_id', 'Alamat tidak valid.');
             return;
         }
 
-        // 3️⃣ DB Transaction
         DB::beginTransaction();
 
         try {
-            // ... (kode validasi stock) ...
+            // 2. Ambil seller_id dari produk pertama di cart
+            $firstProductId = $this->checkout_items[0]['product_id'] ?? null;
+            $sellerId = $firstProductId
+                ? Product::find($firstProductId)?->user_id
+                : null;
 
-            // Calculate totals
-            $subtotal = collect($this->checkout_items)->sum('total_amount');
-            $shipping_amount = $this->shipping_costs[$this->shipping_method];
-            $grand_total = $subtotal + $shipping_amount;
-
-            // Create Order
+            // 3. Buat order
             $order = Order::create([
-                'user_id' => auth()->id(),
-                'address_id' => $address->id,
-                'grand_total' => $grand_total,
-                'subtotal' => $subtotal,
-                'total_amount' => $grand_total,
-                'payment_method' => $this->payment_method,
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'currency' => 'IDR',
+                'user_id'         => auth()->id(),
+                'seller_id'       => $sellerId, // ← seller_id dari produk
+                'address_id'      => $address->id,
+                'grand_total'     => $this->grandTotal,
+                'shipping_cost'   => $this->shippingCost,
+                'total_weight'    => $this->totalWeight,
                 'shipping_method' => $this->shipping_method,
-                'shipping_amount' => $shipping_amount,
-                'shipping_cost' => $shipping_amount,
-                'notes' => $this->notes,
-                'shipping_address' => $address->formatted_address,
+                'payment_method'  => $this->payment_method,
+                'payment_status'  => 'pending',
+                'status'          => 'pending',
+                'notes'           => $this->notes,
             ]);
 
-            // ✅ LOG 2: Cek order created
-            \Log::info('Order Created:', [
-                'order_id' => $order->id,
-                'payment_method' => $order->payment_method
-            ]);
-
-            // Create Order Items & Decrease Stock
+            // 4. Buat order items & kurangi stok
             foreach ($this->checkout_items as $item) {
+                $product = Product::findOrFail($item['product_id']);
+
+                if ($product->stock < $item['quantity']) {
+                    throw new \Exception("Stok tidak cukup untuk: {$product->name}");
+                }
+
                 $order->items()->create([
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_amount' => $item['unit_amount'],
+                    'product_id'   => $product->id,
+                    'quantity'     => $item['quantity'],
+                    'unit_amount'  => $item['unit_amount'],
                     'total_amount' => $item['total_amount'],
                 ]);
 
-                $product = Product::find($item['product_id']);
                 $product->decrement('stock', $item['quantity']);
             }
 
-            // Remove dari cart
-            foreach ($this->checkout_items as $item) {
-                CartManagement::removeCartItem($item['product_id']);
+            // 5. === COD ===
+            if ($this->payment_method === 'cod') {
+                // ✅ COD: status tetap 'pending' — bayar saat barang sampai
+                // JANGAN markAsPaid() di sini
+                DB::commit();
+
+                foreach ($this->checkout_items as $item) {
+                    CartManagement::removeCartItem($item['product_id']);
+                }
+                session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
+
+                return redirect()->route('user.order.success', $order->id);
             }
 
-            // Clear session
-            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
+            // 6. === MIDTRANS ===
+            Config::$serverKey    = config('services.midtrans.server_key');
+            Config::$isProduction = config('services.midtrans.is_production');
+            Config::$isSanitized  = config('services.midtrans.is_sanitized');
+            Config::$is3ds        = config('services.midtrans.is_3ds');
+
+            $midtransOrderId = 'ORDER-' . $order->id . '-' . time();
+
+            $params = [
+                'transaction_details' => [
+                    'order_id'     => $midtransOrderId,
+                    'gross_amount' => (int) $order->grand_total,
+                ],
+                'customer_details' => [
+                    'first_name' => auth()->user()->name,
+                    'email'      => auth()->user()->email,
+                    'phone'      => $address->phone ?? '',
+                ],
+                'item_details'     => $this->getItemDetails($order),
+                'enabled_payments' => [
+                    'credit_card',
+                    'bca_va',
+                    'bni_va',
+                    'bri_va',
+                    'mandiri_va',
+                    'permata_va',
+                    'other_va',
+                    'gopay',
+                    'shopeepay',
+                    'qris',
+                ],
+                'callbacks' => [
+                    'finish' => route('user.payment.finish', $order->id),
+                ],
+            ];
+
+            $snapToken = Snap::getSnapToken($params);
+
+            Log::info('Snap token berhasil dibuat', ['order_id' => $order->id]);
+
+            $order->update([
+                'snap_token'        => $snapToken,
+                'midtrans_order_id' => $midtransOrderId,
+            ]);
 
             DB::commit();
 
-            // ✅ LOG 3: Cek redirect condition
-            \Log::info('Before Redirect:', [
-                'payment_method' => $this->payment_method,
-                'is_midtrans' => $this->payment_method === 'midtrans',
-                'order_id' => $order->id
-            ]);
-
-            // REDIRECT BERDASARKAN PAYMENT METHOD
-            if ($this->payment_method === 'midtrans') {
-                \Log::info('Redirecting to Midtrans payment page');
-                return redirect()->route('user.payment', ['order' => $order->id]);
+            foreach ($this->checkout_items as $item) {
+                CartManagement::removeCartItem($item['product_id']);
             }
+            session()->forget(['checkout_items', 'checkout_total', 'checkout_timestamp']);
 
-            // Untuk COD/Transfer
-            \Log::info('Redirecting to success page');
-            session()->flash('success', 'Order placed successfully!');
-            return redirect()->route('user.order.success', ['order_id' => $order->id]);
+            $this->dispatch('open-midtrans-popup', [
+                'token'      => $snapToken,
+                'successUrl' => route('user.payment.success', $order->id),
+                'pendingUrl' => route('user.payment.finish', $order->id),
+                'myOrderUrl' => route('user.my-orders.show', $order->id),
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Order Creation Failed:', ['error' => $e->getMessage()]);
-            session()->flash('error', 'Order failed: ' . $e->getMessage());
-            $this->validateCheckoutItems();
-            return null;
+
+            Log::error('Checkout gagal', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+                'file'  => $e->getFile(),
+            ]);
+
+            $this->addError('checkout', 'Checkout gagal: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Computed properties
-     */
-    public function getSubtotalProperty()
+    private function getItemDetails(Order $order): array
     {
-        return collect($this->checkout_items)->sum('total_amount');
-    }
+        $items = [];
 
-    public function getShippingCostProperty()
-    {
-        return $this->shipping_costs[$this->shipping_method] ?? 0;
-    }
+        foreach ($order->items as $item) {
+            $items[] = [
+                'id'       => $item->product_id,
+                'price'    => (int) $item->unit_amount,
+                'quantity' => $item->quantity,
+                'name'     => substr($item->product->name ?? 'Product', 0, 50),
+            ];
+        }
 
-    public function getGrandTotalProperty()
-    {
-        return $this->subtotal + $this->shipping_cost;
+        if ($order->shipping_cost > 0) {
+            $items[] = [
+                'id'       => 'SHIPPING',
+                'price'    => (int) $order->shipping_cost,
+                'quantity' => 1,
+                'name'     => 'Ongkos Kirim - ' . ucfirst($order->shipping_method),
+            ];
+        }
+
+        return $items;
     }
 
     public function render()
     {
-        return view('livewire.checkout-page');
+        return view('livewire.checkout-page', [
+            'primaryAddress' => $this->primaryAddress,
+            'shippingInfo'   => $this->shippingInfo,
+        ]);
     }
 }

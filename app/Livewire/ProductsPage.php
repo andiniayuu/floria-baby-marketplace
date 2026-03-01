@@ -18,6 +18,8 @@ class ProductsPage extends Component
 {
     use WithPagination;
 
+    const PAGINATION_THRESHOLD = 20;
+
     #[Url]
     public $selected_categories = [];
 
@@ -36,17 +38,21 @@ class ProductsPage extends Component
     #[Url]
     public $sort = 'latest';
 
-    // add product to cart method
+    public function updatingSelectedCategories() { $this->resetPage(); }
+    public function updatingSelectedBrands()     { $this->resetPage(); }
+    public function updatingFeatured()           { $this->resetPage(); }
+    public function updatingOnSale()             { $this->resetPage(); }
+    public function updatingPriceRange()         { $this->resetPage(); }
+    public function updatingSort()               { $this->resetPage(); }
+
     public function addToCart($product_id)
     {
-
         $total_count = CartManagement::addItemToCart($product_id);
 
         $this->dispatch('update-cart-count', total_count: $total_count)->to(Navbar::class);
 
         session()->push('cart', $product_id);
 
-        // Tampilan Notif
         LivewireAlert::title('Sukses!')
             ->text('Produk ditambahkan')
             ->success()
@@ -56,7 +62,7 @@ class ProductsPage extends Component
 
     public function render()
     {
-        $productQuery = Product::query()->where('is_Active', 1);
+        $productQuery = Product::query()->where('is_active', 1);
 
         if (!empty($this->selected_categories)) {
             $productQuery->whereIn('category_id', $this->selected_categories);
@@ -67,7 +73,7 @@ class ProductsPage extends Component
         }
 
         if ($this->featured) {
-            $productQuery->where('is_feature', 1);
+            $productQuery->where('is_featured', 1);
         }
 
         if ($this->on_sale) {
@@ -86,10 +92,23 @@ class ProductsPage extends Component
             $productQuery->orderBy('price');
         }
 
+        // Hitung total produk sesuai filter
+        $totalCount = (clone $productQuery)->count();
+        $usePagination = $totalCount > self::PAGINATION_THRESHOLD;
+
+        // Urutkan: in-stock dulu, out-of-stock belakang
+        $productQuery->orderByRaw('CASE WHEN stock > 0 THEN 0 ELSE 1 END');
+
+        $products = $usePagination
+            ? $productQuery->paginate(self::PAGINATION_THRESHOLD)
+            : $productQuery->get();
+
         return view('livewire.products-page', [
-            'products' => $productQuery->paginate(6),
-            'brands' => Brand::where('is_active', 1)->get(['id', 'name', 'slug']),
-            'categories' => Category::where('is_active', 1)->get(['id', 'name', 'slug']),
+            'products'       => $products,
+            'totalCount'     => $totalCount,
+            'usePagination'  => $usePagination,
+            'brands'         => Brand::where('is_active', 1)->get(['id', 'name', 'slug']),
+            'categories'     => Category::where('is_active', 1)->get(['id', 'name', 'slug']),
         ]);
     }
 }

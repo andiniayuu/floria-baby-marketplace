@@ -14,7 +14,9 @@ class MyOrdersPage extends Component
 
     public function render()
     {
-        $my_orders = Order::where('user_id', auth()->id())->latest()->paginate(10);
+        $my_orders = Order::where('user_id', auth()->id())
+        ->latest()
+        ->paginate(10);
 
         return view('livewire.my-orders-page', [
             'orders' => $my_orders,

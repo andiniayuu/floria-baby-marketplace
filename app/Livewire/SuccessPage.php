@@ -6,14 +6,15 @@ use App\Models\Order;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Stripe\Checkout\Session;
-use Stripe\Stripe;
 
 #[Title('Success - FloriaBaby')]
 class SuccessPage extends Component
 {
     #[Url]
-    public $session_id;
+    public $order_id;
+
+    #[Url]
+    public $transaction_status;
 
     public function render()
     {
@@ -22,16 +23,17 @@ class SuccessPage extends Component
             ->latest()
             ->firstOrFail();
 
-        if ($this->session_id) {
-            Stripe::setApiKey(config('services.stripe.secret'));
-            $session = Session::retrieve($this->session_id);
-
-            if ($session->payment_status !== 'paid') {
+        // Handle Midtrans callback
+        if ($this->order_id && $this->transaction_status) {
+            // Verifikasi status pembayaran dari Midtrans
+            if (in_array($this->transaction_status, ['capture', 'settlement'])) {
+                $order->update(['payment_status' => 'paid']);
+            } elseif (in_array($this->transaction_status, ['pending'])) {
+                $order->update(['payment_status' => 'pending']);
+            } elseif (in_array($this->transaction_status, ['deny', 'expire', 'cancel'])) {
                 $order->update(['payment_status' => 'failed']);
                 return redirect()->route('cancel');
             }
-
-            $order->update(['payment_status' => 'paid']);
         }
 
         return view('livewire.success-page', [
