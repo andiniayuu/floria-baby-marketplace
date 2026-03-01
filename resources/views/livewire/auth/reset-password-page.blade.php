@@ -1,4 +1,4 @@
-<div class="w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
+<div class="pt-20 min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50">
   <div class="flex h-full items-center">
     <main class="w-full max-w-md mx-auto p-6">
       <div class="mt-7 bg-white border border-gray-200 rounded-xl shadow-sm">

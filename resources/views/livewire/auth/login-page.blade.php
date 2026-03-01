@@ -1,19 +1,21 @@
-<div class="w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
-  <div class="flex h-full items-center">
-    <main class="w-full max-w-md mx-auto p-6">
+<div class="pt-20 min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50">
+  <div class="flex items-center justify-center min-h-[calc(100vh-6rem)]">
+    <main class="w-full max-w-md p-6">
+
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div class="p-4 sm:p-7">
+        <div class="p-6 sm:p-7">
+
           <div class="text-center">
-            <h1 class="block text-2xl font-bold text-gray-800">Sign in</h1>
+            <h1 class="text-2xl font-bold text-gray-800">Sign in</h1>
             <p class="mt-2 text-sm text-gray-600">
               Don't have an account yet?
-              <a class="text-blue-600 decoration-2 hover:underline font-medium" href="/register">
+              <a href="/register" class="text-blue-600 font-medium hover:underline">
                 Sign up here
               </a>
             </p>
           </div>
 
-          <hr class="my-5 border-slate-300">
+          <hr class="my-6 border-gray-200">
 
           <!-- Form -->
           <form wire:submit.prevent='login'>
