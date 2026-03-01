@@ -15,28 +15,16 @@ class ListOrders extends ListRecords
         return [
             'all' => Tab::make('Semua'),
 
-            'pending' => Tab::make('Pending')
+            'pending' => Tab::make('Menunggu')
                 ->modifyQueryUsing(
                     fn($query) =>
-                    $query->where('status', 'pending')
-                ),
-
-            'payment_uploaded' => Tab::make('Bukti Upload')
-                ->modifyQueryUsing(
-                    fn($query) =>
-                    $query->where('status', 'payment_uploaded')
+                    $query->where('status', 'Menunggu')
                 ),
 
             'confirmed' => Tab::make('Dikonfirmasi')
                 ->modifyQueryUsing(
                     fn($query) =>
                     $query->where('status', 'confirmed')
-                ),
-
-            'processing' => Tab::make('Diproses')
-                ->modifyQueryUsing(
-                    fn($query) =>
-                    $query->where('status', 'processing')
                 ),
 
             'packed' => Tab::make('Dikemas')

@@ -37,31 +37,28 @@ class OrderResource extends Resource
                         Forms\Components\Select::make('user_id')
                             ->label('Pelanggan')
                             ->relationship('user', 'name')
-                           ->disabled(),
+                            ->disabled(),
 
-                        // Forms\Components\Select::make('status')
-                        //     ->label('Status Pesanan')
-                        //     ->options([
-                        //         'pending' => 'Menunggu Pembayaran',
-                        //         'payment_uploaded' => 'Bukti Pembayaran Diupload',
-                        //         'confirmed' => 'Dikonfirmasi',
-                        //         'processing' => 'Diproses',
-                        //         'packed' => 'Dikemas',
-                        //         'shipped' => 'Dikirim',
-                        //         'delivered' => 'Sampai',
-                        //         'completed' => 'Selesai',
-                        //         'cancelled' => 'Dibatalkan',
-                        //         'rejected' => 'Ditolak',
-                        //     ])
-                        //     ->required()
-                        //     ->native(false),
+                        Forms\Components\Select::make('status')
+                            ->label('Status Pesanan')
+                            ->options([
+                                'pending'    => 'Menunggu',
+                                'confirmed'  => 'Dikonfirmasi',
+                                'processing' => 'Diproses',
+                                'packed'     => 'Dikemas',
+                                'shipped'    => 'Dikirim',
+                                'delivered'  => 'Terkirim',
+                                'completed'  => 'Selesai',
+                                'cancelled'  => 'Dibatalkan',
+                            ])
+                            ->native(false),
 
                         Forms\Components\Select::make('payment_status')
                             ->label('Status Pembayaran')
                             ->options([
-                                'pending' => 'Menunggu',
-                                'paid' => 'Dibayar',
-                                'failed' => 'Gagal',
+                                'pending'  => 'Menunggu',  // ✅ FIX
+                                'paid'     => 'Lunas',
+                                'failed'   => 'Gagal',
                                 'refunded' => 'Refund',
                             ])
                             ->required()
@@ -70,7 +67,6 @@ class OrderResource extends Resource
                         Forms\Components\Placeholder::make('tracking_number')
                             ->label('No Resi')
                             ->content(fn($record) => $record?->tracking_number ?? '- Belum Dikirim -'),
-
 
                         Forms\Components\Textarea::make('notes')
                             ->label('Catatan Admin')
@@ -87,15 +83,15 @@ class OrderResource extends Resource
                             ->rows(3),
 
                         Forms\Components\TextInput::make('shipping_method')
+                            ->label('Metode Pengiriman')
                             ->disabled()
                             ->default('-'),
 
-                        Forms\Components\TextInput::make('shipping_amount')
-                            ->label('ongkir')
+                        Forms\Components\TextInput::make('shipping_cost')
+                            ->label('Ongkos Kirim')
                             ->disabled()
                             ->prefix('Rp')
                             ->default(0),
-
                     ])
                     ->columns(2),
 
@@ -136,54 +132,94 @@ class OrderResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                // ✅ FIX: seller.name dari relasi seller (user)
                 Tables\Columns\TextColumn::make('seller.name')
                     ->label('Seller')
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->color('warning'),
+                    ->color('warning')
+                    ->default('—'),
 
-                Tables\Columns\TextColumn::make('total_amount')
+                // ✅ FIX: gunakan grand_total bukan total_amount
+                Tables\Columns\TextColumn::make('grand_total')
                     ->label('Total')
                     ->money('IDR')
                     ->sortable(),
 
-                // Tables\Columns\TextColumn::make('status')
-                //     ->label('Status')
-                //     ->badge()
-                //     ->color(fn(string $state): string => match ($state) {
-                //         'new' => 'gray',
-                //         'pending' => 'gray',
-                //         'payment_uploaded' => 'info',
-                //         'confirmed' => 'primary',
-                //         'processing' => 'warning',
-                //         'packed' => 'warning',
-                //         'shipped' => 'info',
-                //         'delivered' => 'success',
-                //         'completed' => 'success',
-                //         'cancelled' => 'danger',
-                //         'rejected' => 'danger',
-                //     })
-                //     ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'          => 'Menunggu',
+                        'payment_uploaded' => 'Bukti Dikirim',
+                        'confirmed'        => 'Dikonfirmasi',
+                        'processing'       => 'Diproses',
+                        'packed'           => 'Dikemas',
+                        'shipped'          => 'Dikirim',
+                        'delivered'        => 'Terkirim',
+                        'completed'        => 'Selesai',
+                        'cancelled'        => 'Dibatalkan',
+                        'rejected'         => 'Ditolak',
+                        default            => ucfirst($state),
+                    })
+                    ->color(fn(string $state): string => match ($state) {
+                        'pending'          => 'gray',
+                        'payment_uploaded' => 'warning',
+                        'confirmed'        => 'primary',
+                        'processing'       => 'warning',
+                        'packed'           => 'warning',
+                        'shipped'          => 'info',
+                        'delivered'        => 'success',
+                        'completed'        => 'success',
+                        'cancelled'        => 'danger',
+                        'rejected'         => 'danger',
+                        default            => 'gray',
+                    })
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Pembayaran')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'  => 'Menunggu',  // ✅ FIX
+                        'paid'     => 'Lunas',
+                        'failed'   => 'Gagal',
+                        'refunded' => 'Refund',
+                        default    => ucfirst($state),
+                    })
                     ->color(fn(string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'paid' => 'success',
-                        'failed' => 'danger',
+                        'pending'  => 'gray',
+                        'paid'     => 'success',
+                        'failed'   => 'danger',
                         'refunded' => 'warning',
+                        default    => 'gray',
                     })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal')
-                    ->dateTime('d M Y H:i')
+                    ->formatStateUsing(
+                        fn($state) =>
+                        $state
+                            ? $state->timezone('Asia/Jakarta')->format('d M Y, H:i') . ' WIB'
+                            : '-'
+                    )
                     ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending'          => 'Menunggu',
+                        'payment_uploaded' => 'Bukti Dikirim',
+                        'confirmed'        => 'Dikonfirmasi',
+                        'processing'       => 'Diproses',
+                        'packed'           => 'Dikemas',
+                        'shipped'          => 'Dikirim',
+                        'delivered'        => 'Terkirim',
+                        'completed'        => 'Selesai',
+                        'cancelled'        => 'Dibatalkan',
+                    ])
                     ->multiple()
                     ->native(false),
 
@@ -205,14 +241,10 @@ class OrderResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->update([
-                            'status' => 'confirmed',
+                            'status'         => 'confirmed',
                             'payment_status' => 'paid',
                         ]);
-
-                        Notification::make()
-                            ->success()
-                            ->title('Pesanan Dikonfirmasi')
-                            ->send();
+                        Notification::make()->success()->title('Pesanan Dikonfirmasi')->send();
                     }),
 
                 Tables\Actions\Action::make('reject')
@@ -223,29 +255,41 @@ class OrderResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->update([
-                            'status' => 'rejected',
+                            'status'         => 'rejected',
                             'payment_status' => 'failed',
                         ]);
+                        Notification::make()->danger()->title('Pesanan Ditolak')->send();
+                    }),
 
-                        Notification::make()
-                            ->danger()
-                            ->title('Pesanan Ditolak')
-                            ->send();
+                // ✅ Tambah action COD delivered untuk admin
+                Tables\Actions\Action::make('cod_delivered')
+                    ->label('COD Diterima')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn(Order $record) => $record->payment_method === 'cod'
+                        && $record->status === 'shipped'
+                        && !$record->isPaid())
+                    ->requiresConfirmation()
+                    ->modalDescription('Konfirmasi bahwa pembeli sudah membayar dan barang sudah diterima.')
+                    ->action(function (Order $record) {
+                        $record->markCodDelivered();
+                        Notification::make()->success()->title('COD Lunas — Pesanan Selesai')->send();
                     }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListOrders::route('/'),
-            'view' => Pages\ViewOrder::route('/{record}'),
-            'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'view'  => Pages\ViewOrder::route('/{record}'),
+            'edit'  => Pages\EditOrder::route('/{record}/edit'),
         ];
     }
 }

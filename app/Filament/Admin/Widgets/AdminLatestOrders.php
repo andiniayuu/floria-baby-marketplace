@@ -33,19 +33,38 @@ class AdminLatestOrders extends BaseWidget
                     ->badge()
                     ->color('warning'),
 
-                Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make('grand_total')
                     ->label('Total')
                     ->money('IDR'),
 
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'          => 'Menunggu',
+                        'payment_uploaded' => 'Bukti Dikirim',
+                        'confirmed'        => 'Dikonfirmasi',
+                        'processing'       => 'Diproses',
+                        'packed'           => 'Dikemas',
+                        'shipped'          => 'Dikirim',
+                        'delivered'        => 'Terkirim',
+                        'completed'        => 'Selesai',
+                        'cancelled'        => 'Dibatalkan',
+                        'rejected'         => 'Ditolak',
+                        default            => ucfirst($state),
+                    })
                     ->color(fn(string $state): string => match ($state) {
-                        'payment_uploaded' => 'info',
-                        'confirmed' => 'primary',
-                        'processing' => 'warning',
-                        'shipped' => 'info',
-                        'completed' => 'success',
-                        default => 'gray',
+                        'pending'          => 'gray',
+                        'payment_uploaded' => 'warning',
+                        'confirmed'        => 'primary',
+                        'processing'       => 'warning',
+                        'packed'           => 'warning',
+                        'shipped'          => 'info',
+                        'delivered'        => 'success',
+                        'completed'        => 'success',
+                        'cancelled'        => 'danger',
+                        'rejected'         => 'danger',
+                        default            => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

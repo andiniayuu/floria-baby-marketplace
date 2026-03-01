@@ -15,7 +15,7 @@ class AdminStatsOverview extends BaseWidget
     {
         // Total Revenue
         $totalRevenue = Order::where('payment_status', 'paid')
-            ->sum('total_amount');
+            ->sum('grand_total');
 
         // Today Orders
         $todayOrders = Order::whereDate('created_at', today())->count();
