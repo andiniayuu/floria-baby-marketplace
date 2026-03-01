@@ -1,14 +1,14 @@
-<div class="min-h-screen bg-gray-50">
+<div class="pt-14 min-h-screen bg-gray-50">
   <div class="w-full max-w-7xl mx-auto px-4 py-6">
     
     <!-- Header -->
     <div class="mb-5">
-      <h1 class="text-2xl font-bold text-gray-800">Shopping Cart</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Keranjang Belanja</h1>
       <p class="text-gray-600 text-sm mt-1">
         @if(count($cart_items) > 0)
-          {{ count($cart_items) }} {{ Str::plural('item', count($cart_items)) }} in your cart
+          {{ count($cart_items) }} {{ Str::plural('produk', count($cart_items)) }} di keranjang Anda
         @else
-          Your cart is empty
+          Keranjang Anda masih kosong
         @endif
       </p>
     </div>
@@ -16,10 +16,10 @@
     @if(count($cart_items) > 0)
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-      <!-- CART ITEMS SECTION -->
+      <!-- BAGIAN ITEM KERANJANG -->
       <div class="lg:col-span-2 space-y-3">
         
-        <!-- Select All Bar -->
+        <!-- Bar Pilih Semua -->
         <div class="bg-white rounded-sm shadow-sm p-4 border border-gray-200">
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-3 cursor-pointer">
@@ -27,41 +27,41 @@
                      wire:model.live="selectAll"
                      class="w-4 h-4 rounded border-gray-300 text-pink-500 focus:ring-pink-400 cursor-pointer">
               <span class="text-sm font-medium text-gray-700">
-                Select All ({{ count($cart_items) }})
+                Pilih Semua ({{ count($cart_items) }})
               </span>
             </label>
             
             @if(count($selectedItems) > 0)
             <button wire:click="removeSelectedItems"
-                    wire:confirm="Remove {{ count($selectedItems) }} selected items from cart?"
+                    wire:confirm="Hapus {{ count($selectedItems) }} produk yang dipilih dari keranjang?"
                     class="text-red-600 hover:text-red-700 text-sm font-medium transition">
-              Delete ({{ count($selectedItems) }})
+              Hapus ({{ count($selectedItems) }})
             </button>
             @endif
           </div>
         </div>
 
-        <!-- Cart Items -->
+        <!-- Daftar Item Keranjang -->
         <div class="bg-white rounded-sm shadow-sm border border-gray-200">
           
-          <!-- Desktop Table Header -->
+          <!-- Header Tabel Desktop -->
           <div class="hidden md:grid md:grid-cols-12 gap-4 px-5 py-3 bg-gray-50 border-b text-xs font-semibold text-gray-600 uppercase">
-            <div class="col-span-5">Product</div>
-            <div class="col-span-2 text-center">Price</div>
-            <div class="col-span-2 text-center">Quantity</div>
+            <div class="col-span-5">Produk</div>
+            <div class="col-span-2 text-center">Harga</div>
+            <div class="col-span-2 text-center">Jumlah</div>
             <div class="col-span-2 text-center">Subtotal</div>
-            <div class="col-span-1 text-center">Action</div>
+            <div class="col-span-1 text-center">Aksi</div>
           </div>
 
-          <!-- Items List -->
+          <!-- Daftar Item -->
           <div class="divide-y divide-gray-100">
             @foreach ($cart_items as $item)
             
-            <!-- Desktop View -->
+            <!-- Tampilan Desktop -->
             <div wire:key="desktop-{{ $item['product_id'] }}"
                  class="hidden md:grid md:grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-gray-50 transition-colors {{ in_array($item['product_id'], $selectedItems) ? 'bg-pink-50 border-l-4 border-l-pink-400' : '' }}">
               
-              <!-- Checkbox + Product -->
+              <!-- Checkbox + Produk -->
               <div class="col-span-5 flex items-center gap-3">
                 <input type="checkbox"
                        wire:model.live="selectedItems"
@@ -74,7 +74,7 @@
                        alt="{{ $item['name'] }}">
                   @if($item['quantity'] >= $item['stock'])
                   <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-semibold">
-                    Low
+                    Terbatas
                   </span>
                   @endif
                 </div>
@@ -84,19 +84,19 @@
                     {{ $item['name'] }}
                   </h3>
                   <p class="text-xs text-gray-500">
-                    Stock: {{ $item['stock'] }} available
+                    Stok: {{ $item['stock'] }} tersedia
                   </p>
                 </div>
               </div>
               
-              <!-- Price -->
+              <!-- Harga -->
               <div class="col-span-2 text-center">
                 <span class="text-gray-800 font-semibold text-sm">
                   {{ Number::currency($item['unit_amount'], 'IDR') }}
                 </span>
               </div>
               
-              <!-- Quantity Controls -->
+              <!-- Kontrol Jumlah -->
               <div class="col-span-2 flex items-center justify-center">
                 <div class="inline-flex items-center border border-gray-300 rounded-sm">
                   <button wire:click="decreaseQty({{ $item['product_id'] }})"
@@ -128,10 +128,10 @@
                 </span>
               </div>
               
-              <!-- Delete -->
+              <!-- Hapus -->
               <div class="col-span-1 text-center">
                 <button wire:click="removeItem({{ $item['product_id'] }})"
-                        wire:confirm="Remove this item from cart?"
+                        wire:confirm="Hapus produk ini dari keranjang?"
                         class="text-gray-400 hover:text-red-600 transition-colors">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -140,7 +140,7 @@
               </div>
             </div>
 
-            <!-- Mobile View -->
+            <!-- Tampilan Mobile -->
             <div wire:key="mobile-{{ $item['product_id'] }}"
                  class="md:hidden p-4 {{ in_array($item['product_id'], $selectedItems) ? 'bg-pink-50 border-l-4 border-l-pink-400' : '' }}">
               
@@ -151,11 +151,11 @@
                          wire:model.live="selectedItems"
                          value="{{ $item['product_id'] }}"
                          class="w-4 h-4 rounded border-gray-300 text-pink-500">
-                  <span class="text-xs text-gray-600">Select</span>
+                  <span class="text-xs text-gray-600">Pilih</span>
                 </label>
                 
                 <button wire:click="removeItem({{ $item['product_id'] }})"
-                        wire:confirm="Remove this item?"
+                        wire:confirm="Hapus produk ini?"
                         class="text-gray-400 hover:text-red-600">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -163,7 +163,7 @@
                 </button>
               </div>
 
-              <!-- Product Info -->
+              <!-- Info Produk -->
               <div class="flex gap-3 mb-3">
                 <div class="relative flex-shrink-0">
                   <img class="w-20 h-20 rounded-md object-cover border border-gray-200"
@@ -171,7 +171,7 @@
                        alt="{{ $item['name'] }}">
                   @if($item['quantity'] >= $item['stock'])
                   <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
-                    Low
+                    Terbatas
                   </span>
                   @endif
                 </div>
@@ -181,7 +181,7 @@
                     {{ $item['name'] }}
                   </h3>
                   <p class="text-xs text-gray-500 mb-1">
-                    Stock: {{ $item['stock'] }}
+                    Stok: {{ $item['stock'] }}
                   </p>
                   <p class="text-sm font-semibold text-gray-800">
                     {{ Number::currency($item['unit_amount'], 'IDR') }}
@@ -189,7 +189,7 @@
                 </div>
               </div>
 
-              <!-- Quantity & Subtotal -->
+              <!-- Jumlah & Subtotal -->
               <div class="flex items-center justify-between pt-3 border-t border-gray-200">
                 <div class="inline-flex items-center border border-gray-300 rounded-sm">
                   <button wire:click="decreaseQty({{ $item['product_id'] }})"
@@ -227,7 +227,7 @@
 
       </div>
 
-      <!-- ORDER SUMMARY -->
+      <!-- RINGKASAN PESANAN -->
       <div class="lg:col-span-1">
         <div class="bg-white rounded-sm shadow-sm border border-gray-200 sticky top-4">
           
@@ -237,24 +237,24 @@
               <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
-              Order Summary
+              Ringkasan Pesanan
             </h2>
           </div>
 
-          <!-- Summary Details -->
+          <!-- Detail Ringkasan -->
           <div class="px-5 py-4 space-y-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-gray-600">Total Items</span>
+              <span class="text-gray-600">Total Produk</span>
               <span class="font-semibold text-gray-800">{{ count($cart_items) }}</span>
             </div>
 
             <div class="flex justify-between pb-3 border-b border-gray-200">
-              <span class="text-gray-600">Selected Items</span>
+              <span class="text-gray-600">Produk Dipilih</span>
               <span class="font-semibold text-pink-600">{{ count($selectedItems) }}</span>
             </div>
 
             <div class="flex justify-between">
-              <span class="text-gray-600">Cart Total</span>
+              <span class="text-gray-600">Total Keranjang</span>
               <span class="font-semibold text-gray-800">
                 {{ Number::currency($this->cartTotal, 'IDR') }}
               </span>
@@ -262,7 +262,7 @@
 
             @if(count($selectedItems) > 0)
             <div class="flex justify-between pt-3 border-t border-gray-200">
-              <span class="font-semibold text-gray-800">Checkout Total</span>
+              <span class="font-semibold text-gray-800">Total Pembayaran</span>
               <span class="font-bold text-lg text-pink-600">
                 {{ Number::currency($this->checkoutTotal, 'IDR') }}
               </span>
@@ -270,33 +270,45 @@
             @endif
           </div>
 
-          <!-- Checkout Button -->
-          <div class="px-5 py-4 border-t border-gray-200">
-            @if(count($selectedItems) > 0)
-            <button wire:click="checkoutSelected"
-                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-sm transition-all shadow-sm hover:shadow-md text-sm">
-              Checkout ({{ count($selectedItems) }})
-            </button>
-            <p class="text-xs text-center text-gray-500 mt-2">
-              🔒 Secure checkout
-            </p>
-            @else
-            <button disabled
-                    class="w-full bg-gray-300 text-gray-500 font-semibold py-3 rounded-sm cursor-not-allowed text-sm">
-              Select items to checkout
-            </button>
-            <p class="text-xs text-center text-gray-500 mt-2">
-              Please select at least one item
-            </p>
-            @endif
-          </div>
+            <!-- Tombol Checkout -->
+            <div class="px-5 py-4 border-t border-gray-200">
+              @if(count($selectedItems) > 0)
+              <button wire:click="checkoutSelected"
+                      wire:loading.attr="disabled"
+                      wire:target="checkoutSelected"
+                      class="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-sm transition-all shadow-sm hover:shadow-md text-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                
+                {{-- Tampilan Normal --}}
+                <span wire:loading.remove wire:target="checkoutSelected"
+                      class="flex items-center justify-center gap-2">
+                  Beli Sekarang ({{ count($selectedItems) }})
+                </span>
+              
+                {{-- Tampilan Loading --}}
+                <span wire:loading wire:target="checkoutSelected"
+                      class="flex items-center justify-center gap-2">
+                  <svg class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 12 0 12 12H4z"></path>
+                  </svg>
+                  Memproses...
+                </span>
+              
+              </button>
+              <p class="text-xs text-center text-gray-500 mt-2">
+                🔒 Pembayaran Aman
+              </p>
+              @else
+              ...
+              @endif
+            </div>
 
-          <!-- Continue Shopping -->
+          <!-- Lanjut Belanja -->
           <div class="px-5 pb-4">
             <a href="{{ route('products') }}"
                wire:navigate
                class="block w-full text-center border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-sm hover:bg-gray-50 transition-all text-sm">
-              Continue Shopping
+              Lanjut Belanja
             </a>
           </div>
         </div>
@@ -304,15 +316,15 @@
 
     </div>
     @else
-    <!-- Empty Cart -->
+    <!-- Keranjang Kosong -->
     <div class="bg-white rounded-sm shadow-sm border border-gray-200 p-12 text-center">
       <div class="max-w-md mx-auto">
         <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
         </svg>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">Your cart is empty</h3>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Keranjang Anda kosong</h3>
         <p class="text-gray-600 mb-6 text-sm">
-          Looks like you haven't added any items to your cart yet.
+          Sepertinya Anda belum menambahkan produk apapun ke keranjang.
         </p>
         <a href="{{ route('products') }}"
            wire:navigate
@@ -320,7 +332,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
-          Start Shopping
+          Mulai Belanja
         </a>
       </div>
     </div>
@@ -365,4 +377,3 @@
 </style>
 
 </div>
-
