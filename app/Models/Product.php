@@ -18,15 +18,27 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'compare_price',
         'stock',
+        'weight',
         'sku',
         'images',
         'is_active',
+        'is_featured',
+        'on_sale',
     ];
 
     protected $casts = [
-        'images' => 'array',
+        'images'        => 'array',
+        'price'         => 'integer',
+        'compare_price' => 'integer',
+        'stock'         => 'integer',
+        'weight'        => 'integer',
+        'is_active'     => 'boolean',
+        'is_featured'   => 'boolean',
+        'on_sale'       => 'boolean',
     ];
+
     protected static function booted()
     {
         static::creating(function ($product) {
@@ -36,13 +48,7 @@ class Product extends Model
         });
     }
 
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONS
-    |--------------------------------------------------------------------------
-    */
+    // RELATIONS
 
     public function seller()
     {
