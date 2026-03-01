@@ -1,136 +1,239 @@
-<header class="flex z-50 sticky top-0 flex-wrap md:justify-start md:flex-nowrap w-full bg-white text-sm py-3 md:py-0 shadow-md">
-  <nav class="max-w-[85rem] w-full mx-auto px-4 md:px-6 lg:px-8" aria-label="Global">
-    <div class="relative md:flex md:items-center md:justify-between">
-      <div class="flex items-center justify-between">
-        <a class="flex-none text-xl font-semibold text-gray-800" href="/" aria-label="Brand">FloriaBaby</a>
-        <div class="md:hidden">
-          <button type="button" class="hs-collapse-toggle flex justify-center items-center w-9 h-9 text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
-            <svg class="hs-collapse-open:hidden flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" x2="21" y1="6" y2="6" />
-              <line x1="3" x2="21" y1="12" y2="12" />
-              <line x1="3" x2="21" y1="18" y2="18" />
-            </svg>
-            <svg class="hs-collapse-open:block hidden flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
+<header
+  class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100"
+  x-data="{ mobileMenu: false }"
+  x-cloak
+>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
+  <nav class="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="flex items-center justify-between h-16">
+
+      <!-- LOGO -->
+      <a href="/" class="inline-block">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-[#F8A1C4] to-[#7EC8E3]
+                   bg-clip-text text-transparent"
+            style="font-family: 'Dancing Script', cursive;">
+          Floria Baby
+        </h1>
+      </a>
+
+      <!-- RIGHT MENU (DESKTOP) -->
+      <div class="hidden md:flex items-center gap-5">
+
+        <a href="/"
+           class="text-sm font-medium transition-colors hover:text-pink-500 relative group
+                  {{ request()->is('/') ? 'text-pink-500' : 'text-gray-600' }}">
+          Home
+          <span class="absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-200
+                       {{ request()->is('/') ? 'w-full' : 'w-0 group-hover:w-full' }}"></span>
+        </a>
+
+        <a href="/categories"
+           class="text-sm font-medium transition-colors hover:text-pink-500 relative group
+                  {{ request()->is('categories*') ? 'text-pink-500' : 'text-gray-600' }}">
+          Kategori
+          <span class="absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-200
+                       {{ request()->is('categories*') ? 'w-full' : 'w-0 group-hover:w-full' }}"></span>
+        </a>
+
+        <a href="/products"
+           class="text-sm font-medium transition-colors hover:text-pink-500 relative group
+                  {{ request()->is('products*') ? 'text-pink-500' : 'text-gray-600' }}">
+          Produk
+          <span class="absolute -bottom-1 left-0 h-0.5 bg-pink-500 transition-all duration-200
+                       {{ request()->is('products*') ? 'w-full' : 'w-0 group-hover:w-full' }}"></span>
+        </a>
+
+        <!-- CART -->
+        <a href="/cart"
+           class="relative transition-colors hover:text-pink-500
+                  {{ request()->is('cart*') ? 'text-pink-500' : 'text-gray-700' }}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+
+          @if($total_count > 0)
+            <span class="absolute -top-2 -right-2 w-5 h-5 bg-pink-500 text-white text-xs
+                         rounded-full flex items-center justify-center">
+              {{ $total_count }}
+            </span>
+          @endif
+        </a>
+
+        <!-- AUTH -->
+        @guest
+          <a href="/login"
+             class="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-blue-500 text-white
+                    rounded-full font-semibold hover:shadow-lg transition hover:scale-105">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              <span>Masuk</span>
+            </div>
+          </a>
+        @endguest
+
+        @auth
+        <div x-data="{ open: false }" class="relative">
+          <button
+            type="button"
+            @click.stop="open = !open"
+            class="flex items-center gap-2 text-gray-700 hover:text-pink-500 font-medium"
+          >
+            <div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-full
+                        flex items-center justify-center text-white font-semibold">
+              {{ substr(auth()->user()->name, 0, 1) }}
+            </div>
+            <span class="hidden lg:block">{{ auth()->user()->name }}</span>
+            <svg class="w-4 h-4 transition-transform"
+                 :class="{ 'rotate-180': open }"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-        </div>
-      </div>
 
-      <div id="navbar-collapse-with-animation" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block">
-        <div class="overflow-hidden overflow-y-auto max-h-[75vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500">
-          <div class="flex flex-col gap-x-0 mt-5 divide-y divide-dashed divide-gray-200 md:flex-row md:items-center md:justify-end md:gap-x-7 md:mt-0 md:ps-7 md:divide-y-0 md:divide-solid dark:divide-gray-700">
-
-            <a 
-  href="/"
-  class="font-medium py-3 md:py-6
-      @if(request()->is('/'))
-          text-blue-600 
-      @else
-          text-gray-500 hover:text-gray-400 
-      @endif">
-    Home
-</a>
-
-           <a 
-  href="/categories"
-  class="font-medium py-3 md:py-6
-      @if(request()->is('categories'))
-          text-blue-600 dark:text-blue-500
-      @else
-          text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500
-      @endif">
-    Categories
-</a>
-
-
-            <a 
-  href="/products"
-  class="font-medium py-3 md:py-6
-      @if(request()->is('products'))
-          text-blue-600 dark:text-blue-500
-      @else
-          text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500
-      @endif">
-    Product
-</a>
-
-<a 
-  href="/cart"
-  class="font-medium flex items-center py-3 md:py-6
-      @if(request()->is('cart'))
-          text-blue-600 dark:text-blue-500
-      @else
-          text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500
-      @endif
-">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="flex-shrink-0 w-5 h-5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-              </svg>
-              <span class="mr-1">Cart</span> <span class="py-0.5 px-1.5 rounded-full text-xs font-medium bg-blue-50 border border-blue-200 text-blue-600">{{ $total_count }}</span>
-            </a>
-
-            @guest
-              <div class="pt-3 md:pt-0">
-              <a class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/login">
-                <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Log in
-              </a>
+          <div
+            x-show="open"
+            @click.outside="open = false"
+            style="display: none;"
+            x-transition
+            class="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl
+                   border border-gray-100 py-2 z-[9999]">
+            <div class="px-4 py-3 border-b border-gray-100">
+              <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
+              <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
             </div>
-            @endguest
-
-            @auth
-<div class="relative hs-dropdown md:py-4">
-
-  <!-- Button -->
-  <button type="button"
-    class="flex items-center gap-2 font-medium text-gray-600 hover:text-gray-800">
-    {{ auth()->user()->name }}
-
-    <svg class="w-4 h-4 transition-transform hs-dropdown-open:rotate-180"
-      xmlns="http://www.w3.org/2000/svg" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
-    </svg>
-  </button>
-
-  <!-- Dropdown -->
-  <div
-    class="hs-dropdown-menu absolute right-0 top-full mt-2 hidden z-50
-    w-48 bg-white border border-gray-200 shadow-lg rounded-lg p-2">
-
-    <a wire:navigate href="/my-orders"
-      class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
-      My Orders
-    </a>
-
-    <a href="#"
-      class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
-      My Account
-    </a>
-
-    <form method="POST" action="{{ route('logout') }}">
-  @csrf
-  <button type="submit"
-    class="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50">
-    Logout
-  </button>
-</form>
-
-  </div>
-
-</div>
-@endauth
-
-      
+            <a href="{{ route('user.profile.index') }}"
+               class="block px-4 py-2.5 text-sm hover:bg-pink-50 hover:text-pink-600
+                      {{ request()->routeIs('user.profile*') ? 'text-pink-600 bg-pink-50' : 'text-gray-700' }}">
+              Akun Saya
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button type="submit"
+                      class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                Keluar
+              </button>
+            </form>
           </div>
         </div>
+        @endauth
+
       </div>
+
+      <!-- MOBILE BUTTON -->
+      <button
+        x-on:click="mobileMenu = !mobileMenu"
+        class="md:hidden p-2 text-gray-700 hover:text-pink-500"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path x-show="!mobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"/>
+          <path x-show="mobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
     </div>
   </nav>
-</header> 
 
+  <!-- MOBILE MENU -->
+  <div x-show="mobileMenu" x-transition class="md:hidden bg-white border-t border-gray-100">
+    <div class="px-4 py-4 space-y-1">
+
+      <a href="/"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ request()->is('/') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-pink-50 hover:text-pink-500' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Home
+      </a>
+
+      <a href="/categories"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ request()->is('categories*') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-pink-50 hover:text-pink-500' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        Kategori
+      </a>
+
+      <a href="/products"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ request()->is('products*') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-pink-50 hover:text-pink-500' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+        Produk
+      </a>
+
+      <a href="/cart"
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                {{ request()->is('cart*') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-pink-50 hover:text-pink-500' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        Keranjang
+        @if(isset($total_count) && $total_count > 0)
+          <span class="ml-auto w-5 h-5 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
+            {{ $total_count }}
+          </span>
+        @endif
+      </a>
+
+      @auth
+        <div class="border-t border-gray-100 pt-3 mt-3">
+          <a href="{{ route('user.profile.index') }}"
+             class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                    {{ request()->routeIs('user.profile*') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-pink-50 hover:text-pink-500' }}">
+            <div class="w-6 h-6 bg-gradient-to-br from-pink-400 to-blue-400 rounded-full
+                        flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+              {{ substr(auth()->user()->name, 0, 1) }}
+            </div>
+            <div>
+              <p class="font-semibold">{{ auth()->user()->name }}</p>
+              <p class="text-xs text-gray-400">Akun Saya</p>
+            </div>
+          </a>
+          <form method="POST" action="{{ route('logout') }}" class="mt-1">
+            @csrf
+            <button type="submit"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium
+                           text-red-600 hover:bg-red-50 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              Keluar
+            </button>
+          </form>
+        </div>
+      @endauth
+
+      @guest
+        <div class="border-t border-gray-100 pt-3 mt-3">
+          <a href="/login"
+             class="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r
+                    from-pink-500 to-blue-500 text-white rounded-lg font-semibold
+                    hover:shadow-lg transition text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Masuk
+          </a>
+        </div>
+      @endguest
+
+    </div>
+  </div>
+</header>
