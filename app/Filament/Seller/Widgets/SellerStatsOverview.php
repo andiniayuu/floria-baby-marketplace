@@ -3,6 +3,7 @@
 namespace App\Filament\Seller\Widgets;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -21,7 +22,7 @@ class SellerStatsOverview extends BaseWidget
                     $q->where('seller_id', $sellerId);
                 });
             })
-            ->sum('total_amount');
+            ->sum('grand_total');
 
         // Pending Orders
         $pendingOrders = Order::whereIn('status', ['confirmed', 'processing'])
@@ -39,15 +40,13 @@ class SellerStatsOverview extends BaseWidget
             ->count();
 
         // Products Sold
-        $productsSold = Order::where('payment_status', 'paid')
-            ->whereHas('items', function ($query) use ($sellerId) {
-                $query->whereHas('product', function ($q) use ($sellerId) {
-                    $q->where('seller_id', $sellerId);
-                });
+        $productsSold = OrderItem::whereHas('product', function ($q) use ($sellerId) {
+            $q->where('seller_id', $sellerId);
+        })
+            ->whereHas('order', function ($q) {
+                $q->where('payment_status', 'paid');
             })
-            ->withSum('items', 'quantity')
-            ->get()
-            ->sum('items_sum_quantity') ?? 0;
+            ->sum('quantity');
 
         return [
             Stat::make('Total Penjualan', 'Rp ' . Number::format($totalRevenue, locale: 'id'))

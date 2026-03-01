@@ -41,7 +41,14 @@ class ProductResource extends Resource
                             ->label('Slug')
                             ->required()
                             ->maxLength(255)
-                            ->unique(Product::class, 'slug', ignoreRecord: true),
+                            ->unique(Product::class, 'slug', ignoreRecord: true)
+                            ->helperText('Otomatis terisi dari nama produk'),
+
+                        Forms\Components\TextInput::make('sku')
+                            ->label('SKU (Opsional)')
+                            ->maxLength(255)
+                            ->unique(Product::class, 'sku', ignoreRecord: true)
+                            ->helperText('Kode unik produk milik Anda'),
 
                         Forms\Components\Select::make('category_id')
                             ->label('Kategori')
@@ -57,9 +64,10 @@ class ProductResource extends Resource
                             ->preload(),
 
                         Forms\Components\RichEditor::make('description')
-                            ->label('Deskripsi')
+                            ->label('Deskripsi Produk')
                             ->required()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->helperText('Deskripsikan produk Anda secara detail untuk menarik pembeli'),
 
                         Forms\Components\FileUpload::make('images')
                             ->label('Gambar Produk')
@@ -73,10 +81,10 @@ class ProductResource extends Resource
                             ->imageCropAspectRatio('16:9')
                             ->imageResizeTargetWidth('1200')
                             ->imageResizeTargetHeight('675')
-                            ->optimize('webp')
+                            ->imageResizeUpscale(false)
                             ->reorderable()
                             ->columnSpanFull()
-                            ->helperText('Upload maksimal 5 gambar, ukuran max 2MB per gambar'),
+                            ->helperText('Upload maksimal 5 gambar, ukuran max 2MB per gambar. Gambar pertama akan menjadi foto utama.'),
                     ])
                     ->columns(2),
 
@@ -87,35 +95,30 @@ class ProductResource extends Resource
                             ->required()
                             ->integer()
                             ->prefix('Rp')
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->helperText('Harga yang akan ditampilkan ke pembeli'),
 
-                        // Forms\Components\TextInput::make('compare_price')
-                        //     ->label('Harga Coret (Opsional)')
-                        //     ->numeric()
-                        //     ->prefix('Rp')
-                        //     ->minValue(0)
-                        //     ->helperText('Harga sebelum diskon'),
+                        Forms\Components\TextInput::make('compare_price')
+                            ->label('Harga Coret (Opsional)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->minValue(0)
+                            ->helperText('Harga sebelum diskon, kosongkan jika tidak ada'),
 
                         Forms\Components\TextInput::make('stock')
                             ->label('Stok')
                             ->required()
                             ->numeric()
                             ->minValue(0)
-                            ->default(0),
+                            ->default(0)
+                            ->helperText('Jumlah stok yang tersedia'),
 
-                        // Forms\Components\TextInput::make('sku')
-                        //     ->label('SKU (Opsional)')
-                        //     ->maxLength(100)
-                        //     ->unique(Product::class, 'sku', ignoreRecord: true)
-                        //     ->helperText('Kode unik produk'),
-
-                        // Forms\Components\TextInput::make('weight')
-                        //     ->label('Berat (gram)')
-                        //     ->numeric()
-                        //     ->minValue(0)
-                        //     ->suffix('gr')
-                        //     ->helperText('Untuk kalkulasi ongkir')
-                        //     ->required(),
+                        Forms\Components\TextInput::make('weight')
+                            ->label('Berat (gram)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->suffix('gr')
+                            ->helperText('Untuk kalkulasi ongkos kirim'),
                     ])
                     ->columns(2),
 
@@ -125,15 +128,21 @@ class ProductResource extends Resource
                             ->label('Aktifkan Produk')
                             ->default(true)
                             ->inline(false)
-                            ->helperText('Produk akan tampil di website jika aktif'),
+                            ->helperText('Produk akan tampil di website jika diaktifkan'),
 
-                        Forms\Components\Toggle::make('is_featured')
-                            ->label('Tandai sebagai Unggulan')
-                            ->default(false)
-                            ->inline(false)
-                            ->helperText('Produk unggulan akan ditampilkan di halaman utama'),
+                        // Forms\Components\Toggle::make('is_featured')
+                        //     ->label('Tandai sebagai Unggulan')
+                        //     ->default(false)
+                        //     ->inline(false)
+                        //     ->helperText('Produk unggulan akan ditonjolkan di halaman toko Anda'),
+
+                        // Forms\Components\Toggle::make('on_sale')
+                        //     ->label('Sedang Promo / Diskon')
+                        //     ->default(false)
+                        //     ->inline(false)
+                        //     ->helperText('Tampilkan label diskon pada produk ini'),
                     ])
-                    ->columns(2),
+                    ->columns(3),
             ]);
     }
 
@@ -154,6 +163,11 @@ class ProductResource extends Resource
                     ->weight('bold')
                     ->wrap(),
 
+                Tables\Columns\TextColumn::make('sku')
+                    ->label('SKU')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Kategori')
                     ->badge()
@@ -172,6 +186,12 @@ class ProductResource extends Resource
                     ->money('IDR', locale: 'id')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('compare_price')
+                    ->label('Harga Coret')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('stock')
                     ->label('Stok')
                     ->badge()
@@ -183,12 +203,19 @@ class ProductResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_active')
-                    ->label('Status')
+                    ->label('Aktif')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
+
+                Tables\Columns\IconColumn::make('on_sale')
+                    ->label('Diskon')
+                    ->boolean()
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
@@ -214,12 +241,16 @@ class ProductResource extends Resource
                     ->falseLabel('Tidak Aktif')
                     ->native(false),
 
-                Tables\Filters\Filter::make('stock')
+                Tables\Filters\TernaryFilter::make('on_sale')
+                    ->label('Sedang Diskon')
+                    ->boolean()
+                    ->native(false),
+
+                Tables\Filters\Filter::make('stock_empty')
                     ->label('Stok Habis')
                     ->query(fn(Builder $query): Builder => $query->where('stock', '<=', 0)),
             ])
             ->actions([
-                // Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -238,6 +269,18 @@ class ProductResource extends Resource
                         ->color('danger')
                         ->action(fn($records) => $records->each->update(['is_active' => false]))
                         ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('mark_sale')
+                        ->label('Tandai Diskon')
+                        ->icon('heroicon-o-tag')
+                        ->color('warning')
+                        ->action(fn($records) => $records->each->update(['on_sale' => true]))
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('unmark_sale')
+                        ->label('Hapus Label Diskon')
+                        ->icon('heroicon-o-x-mark')
+                        ->color('gray')
+                        ->action(fn($records) => $records->each->update(['on_sale' => false]))
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -247,7 +290,7 @@ class ProductResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('seller_id', Filament::auth()->id())
-            ->with(['category', 'images', 'variants']);
+            ->with(['category', 'brand']);
     }
 
     public static function getPages(): array
@@ -255,7 +298,6 @@ class ProductResource extends Resource
         return [
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
-            // 'view' => Pages\ViewProduct::route('/{record}'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
         ];
     }

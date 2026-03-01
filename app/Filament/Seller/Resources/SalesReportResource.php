@@ -71,7 +71,7 @@ class SalesReportResource extends Resource
                     ->counts('items')
                     ->badge(),
 
-                Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make('grand_total')
                     ->label('Total')
                     ->money('IDR')
                     ->summarize([
@@ -80,12 +80,30 @@ class SalesReportResource extends Resource
                             ->label('Total Penjualan'),
                     ]),
 
-                Tables\Columns\TextColumn::make('status')
+                               Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'    => 'Menunggu',
+                        'confirmed'  => 'Dikonfirmasi',
+                        'processing' => 'Diproses',
+                        'packed'     => 'Dikemas',
+                        'shipped'    => 'Dikirim',
+                        'delivered'  => 'Terkirim',
+                        'completed'  => 'Selesai',
+                        'cancelled'  => 'Dibatalkan',
+                        default      => ucfirst($state),
+                    })
                     ->color(fn(string $state): string => match ($state) {
-                        'completed' => 'success',
-                        'shipped' => 'info',
-                        default => 'warning',
+                        'pending'    => 'gray',
+                        'confirmed'  => 'primary',
+                        'processing' => 'warning',
+                        'packed'     => 'warning',
+                        'shipped'    => 'info',
+                        'delivered'  => 'success',
+                        'completed'  => 'success',
+                        'cancelled'  => 'danger',
+                        default      => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

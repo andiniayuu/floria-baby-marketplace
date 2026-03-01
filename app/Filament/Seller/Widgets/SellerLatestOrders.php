@@ -38,18 +38,34 @@ class SellerLatestOrders extends BaseWidget
                     ->label('Pelanggan')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make('grand_total')
                     ->label('Total')
                     ->money('IDR'),
 
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'    => 'Menunggu',
+                        'confirmed'  => 'Dikonfirmasi',
+                        'processing' => 'Diproses',
+                        'packed'     => 'Dikemas',
+                        'shipped'    => 'Dikirim',
+                        'delivered'  => 'Terkirim',
+                        'completed'  => 'Selesai',
+                        'cancelled'  => 'Dibatalkan',
+                        default      => ucfirst($state),
+                    })
                     ->color(fn(string $state): string => match ($state) {
-                        'confirmed' => 'primary',
+                        'pending'    => 'gray',
+                        'confirmed'  => 'primary',
                         'processing' => 'warning',
-                        'shipped' => 'info',
-                        'completed' => 'success',
-                        default => 'gray',
+                        'packed'     => 'warning',
+                        'shipped'    => 'info',
+                        'delivered'  => 'success',
+                        'completed'  => 'success',
+                        'cancelled'  => 'danger',
+                        default      => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

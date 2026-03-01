@@ -30,7 +30,7 @@ class SellerRevenueChart extends ChartWidget
                 end: now(),
             )
             ->perDay()
-            ->sum('total_amount');
+            ->sum('grand_total');
 
         return [
             'datasets' => [
