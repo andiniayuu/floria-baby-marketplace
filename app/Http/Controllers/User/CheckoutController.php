@@ -75,18 +75,16 @@ class CheckoutController extends Controller
 
                 // Buat order
                 $order = Order::create([
-                    'user_id' => Auth::id(),
-                    'seller_id' => $sellerId,
-                    'address_id' => $address->id,
+                    'user_id'        => Auth::id(),
+                    'seller_id'      => $sellerId,
+                    'address_id'     => $address->id,
                     'payment_method' => $validated['payment_method'],
+                    'payment_status' => 'pending',
                     'shipping_method' => $validated['shipping_method'],
-                    'shipping_cost' => $shippingCostPerSeller,
-                    'subtotal' => $subtotal,
-                    'total_amount' => $grandTotal,
-                    'grand_total' => $grandTotal,
-
-                    'notes' => $validated['notes'] ?? null,
-                    'status' => 'pending',
+                    'shipping_cost'  => $shippingCostPerSeller,
+                    'grand_total'    => $grandTotal,
+                    'notes'          => $validated['notes'] ?? null,
+                    'status'         => 'pending',
                 ]);
 
                 // Simpan order items untuk seller ini
