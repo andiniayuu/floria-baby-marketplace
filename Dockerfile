@@ -12,6 +12,6 @@ COPY . .
 
 RUN composer install --optimize-autoloader --no-interaction
 
-EXPOSE 8000
+EXPOSE 8080
 
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
