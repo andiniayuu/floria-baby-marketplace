@@ -165,6 +165,7 @@ class ProductResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('images')
                     ->label('Gambar')
+                    ->disk('public')
                     ->circular()
                     ->stacked()
                     ->limit(3),

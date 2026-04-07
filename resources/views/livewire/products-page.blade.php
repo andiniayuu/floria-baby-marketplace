@@ -147,7 +147,7 @@
                       <div class="relative overflow-hidden">
                         <a href="/products/{{ $product->slug }}" class="block">
                           <img
-                            src="{{ url('storage', $product->images[0]) }}"
+                            src="{{ url('storage', $product->images[0] ?? 'no-image.png') }}"
                             alt="{{ $product->name }}"
                             class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500">
                         </a>
@@ -225,7 +225,7 @@
                       <div class="relative overflow-hidden">
                         <a href="/products/{{ $product->slug }}" class="block">
                           <img
-                            src="{{ url('storage', $product->images[0]) }}"
+                            src="{{ asset('storage/' . $product->images[0]) }}"
                             alt="{{ $product->name }}"
                             class="w-full h-56 object-cover">
                         </a>
